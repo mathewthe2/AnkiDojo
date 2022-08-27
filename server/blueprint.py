@@ -48,19 +48,18 @@ def get_app(path):
 # Reroutes for when user refresh page
 # TODO: dynamic rerouting
 
-@bp.route("/home")
-def redirect_search():
-     return redirect("/home.html")
-
 # @bp.route("/reader")
 # def redirect_reader():
 #      return redirect("/reader.html")
 
-# @bp.route("/settings")
-# def redirect_settings():
-#      return redirect("/settings.html")
-    
+@bp.route("/settings")
+def redirect_settings():
+     return redirect("/settings.html")
 
+@bp.route("/drills")
+def redirect_drills():
+     return redirect("/drills.html")
+    
 @bp.route("/api/decks")
 def get_decks():
     deck_names = ankiHelper.get_deck_names()
