@@ -15,9 +15,13 @@
     "@mantine/hooks": "^5.2.3",
     "@mantine/next": "^5.2.3",
     "@tabler/icons": "^1.90.0",
+    "howler": "^2.2.3",
     "next": "12.2.5",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-timer-hook": "^3.0.5",
+    "use-sound": "^4.0.1",
+    "wanakana": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "18.7.13",

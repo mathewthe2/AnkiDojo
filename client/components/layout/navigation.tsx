@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { createStyles, Navbar, Group, Code, Text } from '@mantine/core';
+import { createStyles, Navbar } from '@mantine/core';
 import {
-  IconBellRinging,
   IconSettings,
   IconBrandAppleArcade,
   IconSearch,
-  IconQuestionMark
+  IconQuestionMark,
+  IconNotebook
 } from '@tabler/icons';
 import Link from 'next/link';
 
@@ -69,10 +69,10 @@ const useStyles = createStyles((theme, _params, getRef) => {
 });
 
 const data = [
-  { link: 'drills', label: 'Drills', icon: IconBellRinging },
-  { link: 'search', label: 'Search', icon: IconSearch },
-  { link: 'games', label: 'Games', icon: IconBrandAppleArcade },
-  { link: 'settings', label: 'Settings', icon: IconSettings },
+  { link: '/drills', label: 'Drills', icon: IconNotebook },
+  { link: '/search', label: 'Search', icon: IconSearch },
+  { link: '/games', label: 'Games', icon: IconBrandAppleArcade },
+  { link: '/settings', label: 'Settings', icon: IconSettings },
 ];
 
 function Navigation() {

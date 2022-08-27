@@ -6,7 +6,7 @@ import {
   ColorScheme,
 } from "@mantine/core";
 import { useState } from "react";
-import ApplicationContainer from "../components/applicationContainer";
+import ApplicationContainer from "@/components/layout/applicationContainer";
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props;
