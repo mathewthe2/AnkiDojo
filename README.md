@@ -1,5 +1,5 @@
 # AnkiDojo
-Anki Dojo Addon for practicing Japanese in Anki
+Drills and games for Japanese decks.
 
 
 ### Development
