@@ -1,0 +1,4 @@
+.DS_Store
+client/.next/
+client/node_modules/*
+server/app/*

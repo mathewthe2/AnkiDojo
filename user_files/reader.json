@@ -1,0 +1,35 @@
+{
+    "model_maps": {
+        "Japanese Morphman Audio Ankiweb": {
+            "ID": "id",
+            "Screenshot": "image",
+            "Expression": "sentence",
+            "Reading": "reading",
+            "English": "translation",
+            "Audio_Sentence": "audio"
+        },
+        "movies2anki - subs2srs": {
+            "Id": "id",
+            "Snapshot": "image",
+            "Expression": "sentence",
+            "Meaning": "translation",
+            "Audio": "audio"
+        },
+        "subs2srs": {
+            "SequenceMarker": "id",
+            "Snapshot": "image",
+            "Expression": "sentence",
+            "Reading": "reading",
+            "Meaning": "translation",
+            "Audio": "audio"
+        },
+        "GameGengoVocab - Japanese": {
+            "Card Order": "id",
+            "Image Field": "image",
+            "Sentence Field": "sentence",
+            "Sentence Field Furigana": "reading",
+            "English Sentences": "translation",
+            "Audio Field": "audio"
+        }
+    }
+}
