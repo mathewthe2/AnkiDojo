@@ -69,9 +69,9 @@ const useStyles = createStyles((theme, _params, getRef) => {
 });
 
 const data = [
+  { link: '/apps', label: 'Apps', icon: IconBrandAppleArcade },
   { link: '/drills', label: 'Drills', icon: IconNotebook },
   { link: '/search', label: 'Search', icon: IconSearch },
-  { link: '/games', label: 'Games', icon: IconBrandAppleArcade },
   { link: '/settings', label: 'Settings', icon: IconSettings },
 ];
 

@@ -1,6 +1,7 @@
 import re
 import requests
 from .util import AnkiHelper
+from .user_apps import UserApps
 
 from flask import (
     Blueprint, current_app, jsonify, redirect, request, send_from_directory
@@ -11,6 +12,7 @@ from flask import (
 WEBPACK_DEV_SERVER_HOST = "http://localhost:8080"
 session = requests.Session()
 ankiHelper = AnkiHelper()
+userApps = UserApps()
 
 def proxy(host, path):
     response = session.get(f"{host}{path}")
@@ -36,6 +38,10 @@ def index():
 # @bp.route("/media/<path:path>")
 # def get_media(path):
 #     return send_from_directory('data/media', path)
+
+@bp.route("/apps/<path:path>")
+def get_media(path):
+    return send_from_directory('data/user_apps', path)
 
 @bp.route("/", defaults={"path": "index.html"})
 @bp.route("/<path:path>")
@@ -83,4 +89,9 @@ def reader(deck_name=None):
     limit = request.args.get('limit', type=int, default=10)
     notes = ankiHelper.get_notes(deck_name, offset, limit)
     return jsonify(notes)
+
+@bp.route("/api/apps")
+def get_apps():
+    apps = userApps.get_apps()
+    return jsonify(apps)
     
