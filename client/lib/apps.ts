@@ -12,4 +12,6 @@ const getUserApps = async () => {
   return content;
 };
 
-export { getUserApps };
+const getAppIconUrl = (userApp:UserAppInterface) => `${process.env.ANKI_HOST}/apps/${userApp.id}/${userApp.icon}`
+
+export { getUserApps, getAppIconUrl };
