@@ -8,8 +8,9 @@ const getUserApps = async () => {
     method: "GET",
     headers: requestHeaders,
   });
-  const content: UserAppInterface[] = await response.json();
-  return content;
+  const userApps: UserAppInterface[] = await response.json();
+  userApps.sort((a, b) => a.title.localeCompare(b.title));
+  return userApps;
 };
 
 const getAppIconUrl = (userApp:UserAppInterface) => `${process.env.ANKI_HOST}/apps/${userApp.id}/${userApp.icon}`
