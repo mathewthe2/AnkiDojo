@@ -8,7 +8,7 @@ function ApplicationContainer({ children }: React.PropsWithChildren<{}>) {
       padding={0}
       fixed
       navbar={<Navigation/>}
-      header={<Header height={60} p="xs"><HeaderItem/></Header>}
+      // header={<Header height={60} p="xs"><HeaderItem/></Header>}
       styles={(theme) => ({
         main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },
       })}

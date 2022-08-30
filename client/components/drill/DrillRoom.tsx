@@ -232,7 +232,6 @@ import {
         <Text style={{ fontSize: 20 }}>Correct answer: {getcorrectAnswerString(activeQuestion)}</Text>
       </Center>
     );
-  
     return (
       <>
         <ProgressBar progress={((totalQuestions - questionList.length) / data.length) * 100} />     

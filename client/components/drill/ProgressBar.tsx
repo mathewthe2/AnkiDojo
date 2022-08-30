@@ -7,7 +7,7 @@ export default class ProgressBar extends React.Component<{ progress: number }> {
       <Box
         style={{
           height: 5,
-          width: '100vw',
+          width: '100%',
         }}
         sx={(theme) => ({
           backgroundColor:

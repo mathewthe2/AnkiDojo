@@ -1,11 +1,21 @@
-import { Group, Text } from "@mantine/core";
+import { Box, Group, Text } from "@mantine/core";
 import { IconSun, IconMoonStars } from "@tabler/icons";
 import { ActionIcon, useMantineColorScheme } from "@mantine/core";
 
 function HeaderItem() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   return (
-    <Group sx={{ height: "100%" }} px={20} position="apart">
+    <Box
+    sx={(theme) => ({
+      paddingLeft: theme.spacing.xs,
+      paddingRight: theme.spacing.xs,
+      paddingBottom: theme.spacing.lg,
+      borderBottom: `1px solid ${
+        theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[2]
+      }`,
+    })}
+  >
+    <Group sx={{ height: "100%" }} position="apart">
       {/* <Logo colorScheme={colorScheme} /> */}
       <Text size="xl">Anki Dojo</Text>
       <ActionIcon
@@ -20,6 +30,7 @@ function HeaderItem() {
         )}
       </ActionIcon>
     </Group>
+    </Box>
   );
 }
 
