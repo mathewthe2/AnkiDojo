@@ -8,7 +8,7 @@ import {
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import useAddCardFormat from "@/hooks/settings/ankiSettings/useAddCardFormat";
 
-function AnkiCardFormatForm() {
+function AnkiCardFormatForm({onCreateCallback}: { onCreateCallback: () => void}) {
   const [modelNames, setModelNames] = useState([]);
   const [fieldNames, setFieldNames] = useState([]);
   const [cardFormat, setCardFormat] = useState<AnkiCardFormat>();
@@ -27,7 +27,8 @@ function AnkiCardFormatForm() {
     }
   }, [cardFormat?.model]);
 
-  const addCardFormat = useAddCardFormat(cardFormat!);
+  const addCardFormat = useAddCardFormat(cardFormat!, onCreateCallback);
+  
   const handleAddCardFormat = async() => {
     if (cardFormat) {
       addCardFormat.mutate();
@@ -48,6 +49,13 @@ function AnkiCardFormatForm() {
       modelMap: modelMap || new Map<string, string>(),
     });
   };
+
+  const validCardFormat = () =>{
+    if (cardFormat?.modelMap) {
+      return cardFormat?.modelMap.size > 0;
+    }
+    return false
+  }
 
   return (
     <Box>
@@ -98,7 +106,7 @@ function AnkiCardFormatForm() {
           </tbody>
         </Table>
       </ScrollArea>
-      <Button mt={20} fullWidth onClick={handleAddCardFormat}>
+      <Button disabled={!validCardFormat()} mt={20} fullWidth onClick={handleAddCardFormat}>
         Add Format
       </Button>
     </Box>

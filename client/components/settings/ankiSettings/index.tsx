@@ -36,7 +36,7 @@ function AnkiSettings() {
         onClose={() => setOpened(false)}
         title="New Anki Card Format"
       >
-        <AnkiCardFormatForm/>
+        <AnkiCardFormatForm onCreateCallback={()=>setOpened(false)} />
       </Modal>
       <Text mt={10} size="sm">Card Formats</Text>
       <Button mt={20} onClick={() => setOpened(true)}>

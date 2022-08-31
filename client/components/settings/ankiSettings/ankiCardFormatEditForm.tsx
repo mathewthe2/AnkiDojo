@@ -1,26 +1,35 @@
 import { useEffect, useState } from "react";
-import { Text, Button, Box, Select, Table, ScrollArea } from "@mantine/core";
+import { Button, Box, Select, Table, ScrollArea } from "@mantine/core";
 import { fieldValueOptions } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import useDeleteCardFormat from "@/hooks/settings/ankiSettings/useDeleteCardFormat";
 import useUpdateCardFormat from "@/hooks/settings/ankiSettings/useUpdateCardFormat";
+import { getModelFields } from "@/lib/anki";
 
 function AnkiCardFormatEditForm({
   cardFormat,
+  onDeleteCallback,
 }: {
   cardFormat: AnkiCardFormat;
+  onDeleteCallback: () => void;
 }) {
-  const [newCardFormat, setNewCardFormat] = useState<AnkiCardFormat>(cardFormat);
+  const [newCardFormat, setNewCardFormat] =
+    useState<AnkiCardFormat>(cardFormat);
+  const [fieldNames, setFieldNames] = useState<string[]>([]);
+
+    useEffect(() => {
+      getModelFields(cardFormat?.model).then((fieldNames:string[]) => setFieldNames(fieldNames))
+    }, []);
 
   const updateCardFormat = useUpdateCardFormat(cardFormat);
 
-  const handleUpdateCardFormat = async() => updateCardFormat.mutate();
+  const handleUpdateCardFormat = async () => updateCardFormat.mutate();
 
-  const deleteCardFormat= useDeleteCardFormat(cardFormat.model);
+  const deleteCardFormat = useDeleteCardFormat(cardFormat.model, onDeleteCallback);
 
-  const handleDeleteCardFormat = async() => {
+  const handleDeleteCardFormat = async () => {
     deleteCardFormat.mutate();
-  }
+  };
 
   const onSelectFieldValue = (fieldName: string, fieldValue: string) => {
     const modelMap: Map<string, string> = newCardFormat.modelMap;
@@ -48,8 +57,8 @@ function AnkiCardFormatEditForm({
             </tr>
           </thead>
           <tbody>
-            {Array.from(cardFormat.modelMap.entries()).map(
-              ([fieldName, fieldValue]) => (
+          {fieldNames.map(
+              (fieldName) => (
                 <tr key={fieldName}>
                   <td>{fieldName}</td>
                   <td>
@@ -57,7 +66,7 @@ function AnkiCardFormatEditForm({
                       clearable
                       searchable
                       data={fieldValueOptions}
-                      defaultValue={fieldValue}
+                      defaultValue={cardFormat.modelMap.has(fieldName) ? cardFormat.modelMap.get(fieldName) : ''}
                       onChange={(value) =>
                         onSelectFieldValue(fieldName, value || "")
                       }
@@ -72,7 +81,12 @@ function AnkiCardFormatEditForm({
       <Button mt={20} fullWidth onClick={handleUpdateCardFormat}>
         Save
       </Button>
-      <Button mt={20} fullWidth variant="outline" onClick={handleDeleteCardFormat}>
+      <Button
+        mt={20}
+        fullWidth
+        variant="outline"
+        onClick={handleDeleteCardFormat}
+      >
         Delete
       </Button>
     </Box>

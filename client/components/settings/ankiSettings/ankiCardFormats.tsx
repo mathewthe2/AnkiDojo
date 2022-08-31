@@ -30,14 +30,9 @@ const useStyles = createStyles((theme) => ({
 }));
 function AnkiCardFormats() {
   const { classes, theme } = useStyles();
-  // const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
   const {data:cardFormats, isLoading:isLoadingCardFormats} = useQuery(AnkiSettingType.CardFormat, getCardFormats)
   const [opened, setOpened] = useState(false);
   const [activeCardFormat, setActiveCardFormat] = useState<AnkiCardFormat>();
-
-  // useEffect(() => {
-  //   getCardFormats().then((cardFormats) => setCardFormats(cardFormats));
-  // }, []);
 
   const selectModel = (cardFormat:AnkiCardFormat) => {
     setActiveCardFormat(cardFormat);
@@ -54,7 +49,7 @@ function AnkiCardFormats() {
         padding="md"
         size="xl"
       >
-        <AnkiCardFormatEditForm cardFormat={activeCardFormat!} />
+        <AnkiCardFormatEditForm cardFormat={activeCardFormat!} onDeleteCallback={()=>setOpened(false)} />
       </Drawer>
       <ScrollArea mt={10} style={{ height: 500 }}>
         {cardFormats?.map((cardFormat) => (

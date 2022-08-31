@@ -9,10 +9,13 @@ const addCardFormat = async (cardFormat: AnkiCardFormat) =>
     model_map: Object.fromEntries(cardFormat.modelMap),
   });
 
-export default function useAddCardFormat(cardFormat: AnkiCardFormat) {
+export default function useAddCardFormat(cardFormat: AnkiCardFormat, onSucessCallback?: Function) {
   return useMutation(() => addCardFormat(cardFormat), {
     onSuccess: () => {
         queryClient.invalidateQueries(AnkiSettingType.CardFormat);
+        if (onSucessCallback) {
+          onSucessCallback();
+        }
       },
   });
 }
