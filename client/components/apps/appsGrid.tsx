@@ -60,9 +60,9 @@ function AppsGrid() {
       <Card shadow="xs" p="md" className={classes.card}>
         <SimpleGrid cols={3} mt="md">
           {userApps.map((userApp) => (
-            <Link href={`/apps/${userApp.id}`} passHref>
-            <UnstyledButton>
-              <Card style={{ minHeight: 300 }} className={classes.item}>
+            <Link key={userApp.id} href={`/apps/${userApp.id}`} passHref>
+              <UnstyledButton>
+                <Card style={{ minHeight: 300 }} className={classes.item}>
                   <Card.Section>
                     <Image
                       width={300}
@@ -90,7 +90,7 @@ function AppsGrid() {
                   >
                     {userApp.description}
                   </Text>
-              </Card>
+                </Card>
               </UnstyledButton>
             </Link>
           ))}
