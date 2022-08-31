@@ -8,15 +8,6 @@ import {
   Group,
 } from "@mantine/core";
 import {
-  IconCreditCard,
-  IconBuildingBank,
-  IconRepeat,
-  IconReceiptRefund,
-  IconReceipt,
-  IconReceiptTax,
-  IconReport,
-  IconCashBanknote,
-  IconCoin,
   IconNotebook,
   IconSearch,
   IconBook,
@@ -27,12 +18,6 @@ const mockdata = [
   { title: "Drills", icon: IconNotebook, color: "pink", href:"/drills" },
   { title: "Search", icon: IconSearch, color: "indigo", href:"" },
   { title: "Reader", icon: IconBook, color: "teal", href:"" },
-  //   { title: 'Refunds', icon: IconReceiptRefund, color: 'green' },
-  //   { title: 'Receipts', icon: IconReceipt, color: 'teal' },
-  //   { title: 'Taxes', icon: IconReceiptTax, color: 'cyan' },
-  //   { title: 'Reports', icon: IconReport, color: 'pink' },
-  //   { title: 'Payments', icon: IconCoin, color: 'red' },
-  //   { title: 'Cashback', icon: IconCashBanknote, color: 'orange' },
 ];
 
 const useStyles = createStyles((theme) => ({
@@ -71,7 +56,7 @@ export default function ActionsGrid() {
   const { classes, theme } = useStyles();
 
   const items = mockdata.map((item) => (
-    <Link href={item.href} passHref>
+    <Link href={item.href} key={item.title} passHref>
     <UnstyledButton key={item.title} className={classes.item}>
       <item.icon color={theme.colors[item.color][6]} size={32} />
       <Text size="xs" mt={7}>

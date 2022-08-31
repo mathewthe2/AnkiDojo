@@ -1,8 +1,9 @@
-import { Box, Card, Text, ScrollArea, UnstyledButton } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Drawer, Card, Text, ScrollArea, UnstyledButton } from "@mantine/core";
 import { createStyles } from "@mantine/core";
-
-// const data = ["Basic", "Anime"];
-const data = new Array(2).fill('Basic');
+import { getCardFormats } from "@/lib/anki";
+import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
+import AnkiCardFormatEditForm from "./ankiCardFormatEditForm";
 
 const useStyles = createStyles((theme) => ({
   paper: {
@@ -27,16 +28,44 @@ const useStyles = createStyles((theme) => ({
 }));
 function AnkiCardFormats() {
   const { classes, theme } = useStyles();
+  const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
+  const [opened, setOpened] = useState(false);
+  const [activeCardFormat, setActiveCardFormat] = useState<AnkiCardFormat>();
+
+  useEffect(() => {
+    getCardFormats().then((cardFormats) => setCardFormats(cardFormats));
+  }, []);
+
+  const selectModel = (cardFormat:AnkiCardFormat) => {
+    setActiveCardFormat(cardFormat);
+    setOpened(true);
+  }
+
   return (
-    <ScrollArea mt={10} style={{height: 500}}>
-      {data.map((cardFormat) => (
-        <Card shadow="md" key={cardFormat} className={classes.paper}>
-          <UnstyledButton style={{width: '100%'}}>
-          <Text>{cardFormat}</Text>
-          </UnstyledButton>
-        </Card>
-      ))}
-    </ScrollArea>
+    <>
+      <Drawer
+        opened={opened}
+        position="left"
+        onClose={() => setOpened(false)}
+        title={<Text weight={700}>{activeCardFormat?.model}</Text>}
+        padding="md"
+        size="xl"
+      >
+        <AnkiCardFormatEditForm cardFormat={activeCardFormat!} />
+      </Drawer>
+      <ScrollArea mt={10} style={{ height: 500 }}>
+        {cardFormats.map((cardFormat) => (
+          <Card shadow="md" key={cardFormat.model} className={classes.paper}>
+            <UnstyledButton
+              style={{ width: "100%" }}
+              onClick={() => selectModel(cardFormat)}
+            >
+              <Text>{cardFormat.model}</Text>
+            </UnstyledButton>
+          </Card>
+        ))}
+      </ScrollArea>
+    </>
   );
 }
 

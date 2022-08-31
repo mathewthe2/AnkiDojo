@@ -76,6 +76,28 @@ def get_models():
     model_names = ankiHelper.get_model_names()
     return jsonify(model_names)
 
+@bp.route("/api/card_formats", methods=('GET', 'POST', 'DELETE'))
+def card_formats():
+    if request.method == 'GET':
+        model_maps = ankiHelper.get_model_maps()
+        return jsonify(model_maps)
+    
+    result = None
+    content = request.get_json()
+    if request.method == "POST":
+        if content and "model" in content and "model_map" in content:
+            result = ankiHelper.update_model_map(content["model"], content["model_map"])
+        return jsonify(result)
+    if request.method == 'DELETE':
+        if content and "model" in content:
+            result = ankiHelper.update_model_map(content["model"], {})
+        return jsonify(result)
+
+@bp.route("/api/primary_deck")
+def get_anki_settings():
+    primary_deck = ankiHelper.get_primary_deck()
+    return jsonify(primary_deck)
+
 @bp.route("/api/fields")
 @bp.route("/api/fields/<string:model_name>")
 def get_fields(model_name=None):

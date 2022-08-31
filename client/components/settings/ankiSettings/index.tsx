@@ -9,7 +9,7 @@ import {
   createStyles,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons";
-import AnkiPrimaryModel from "./ankiPrimaryModel";
+import AnkiPrimaryDeck from "./ankiPrimaryDeck";
 import AnkiCardFormats from "./ankiCardFormats";
 import AnkiCardFormatForm from "./ankiCardFormatForm";
 
@@ -27,9 +27,9 @@ function AnkiSettings() {
   return (
     <Box mt={20}>
       <Text mb={20} className={classes.title}>
-        Anki Settings
+        Anki
       </Text>
-     <AnkiPrimaryModel/>
+     <AnkiPrimaryDeck/>
      <Divider mt={20} />
      <Modal
         opened={opened}
@@ -38,7 +38,8 @@ function AnkiSettings() {
       >
         <AnkiCardFormatForm/>
       </Modal>
-      <Button mt={20} fullWidth onClick={() => setOpened(true)}>
+      <Text mt={10} size="sm">Card Formats</Text>
+      <Button mt={20} onClick={() => setOpened(true)}>
         <Group>
           <IconPlus />
           Add Card Format

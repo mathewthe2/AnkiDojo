@@ -12,7 +12,27 @@ def get_reader_model_maps():
         return reader_config['model_maps']
     else:
         return None
-        
+
+def get_anki_settings():
+     with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'r', encoding='utf-8') as f:
+        anki_settings = json.load(f)
+        return anki_settings
+
+def update_anki_model_map(model_name, model_map):
+    with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'r', encoding='utf-8') as f:
+        anki_settings = json.load(f)
+        if 'model_maps' in anki_settings:
+            if model_map:
+                anki_settings['model_maps'][model_name] = model_map
+            elif model_name in anki_settings['model_maps']:
+                del anki_settings['model_maps'][model_name] 
+        else:
+            if model_map:
+                anki_settings['model_maps'] = [model_map]
+
+    with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'w+', encoding='utf-8') as outfile:
+        json.dump(anki_settings, outfile, indent=4, ensure_ascii=False)
+
 try:
     from anki.rsbackend import NotFoundError
 except:
@@ -55,6 +75,25 @@ class AnkiHelper():
         model = next(model for model in self.collection().models.all() if model['name'] == model_name)
         field_names = self.collection().models.field_names(model)
         return field_names
+
+    def get_model_maps(self):
+        user_models = self.get_model_names()
+        anki_settings = get_anki_settings()
+        if 'model_maps' in anki_settings:
+            all_model_maps = anki_settings['model_maps']
+            return [{model: model_map} for model, model_map in all_model_maps.items() if model in user_models]
+        return []
+
+    def update_model_map(self, model_name, model_map):
+        update_anki_model_map(model_name, model_map)
+        return model_name
+
+    def get_primary_deck(self):
+        anki_settings = get_anki_settings()
+        if "primary_deck" in anki_settings:
+            return anki_settings["primary_deck"]
+        else:
+            return ""
 
     def get_notes(self, deck_name, offset=0, limit=10):
         note_ids = self.collection().find_notes('deck:"{}"'.format(deck_name))

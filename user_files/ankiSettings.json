@@ -1,0 +1,22 @@
+{
+    "model_maps": {
+        "Basic": {
+            "Front": "Expression",
+            "Back": "Glossary"
+        },
+        "Immersion Kit Vocabulary-35fd8": {
+            "Vocabulary-Kanji": "Expression",
+            "Vocabulary-Reading": "Reading",
+            "Vocabulary-English": "Glossary",
+            "Vocabulary-Audio": "Audio",
+            "Sentence-Reading": "Sentence",
+            "Sentence-English": "Sentence Translation",
+            "Screenshot": "Picture",
+            "Sentence-Audio": "Sentence Audio"
+        },
+        "Cloze": {
+            "Text": "Glossary Brief"
+        }
+    },
+    "primary_deck": "Japanese"
+}

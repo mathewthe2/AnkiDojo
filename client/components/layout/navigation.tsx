@@ -1,14 +1,9 @@
 import { useState } from "react";
 import { createStyles, Navbar } from "@mantine/core";
-import {
-  IconSettings,
-  IconBrandAppleArcade,
-  IconSearch,
-  IconQuestionMark,
-  IconNotebook,
-} from "@tabler/icons";
+import { IconQuestionMark } from "@tabler/icons";
 import Link from "next/link";
 import HeaderItem from "./headerItem";
+import { navigationData } from "@/lib/layout/navigation";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   const icon = getRef("icon");
@@ -88,18 +83,11 @@ const useStyles = createStyles((theme, _params, getRef) => {
   };
 });
 
-const data = [
-  { link: "/apps", label: "Apps", icon: IconBrandAppleArcade },
-  { link: "/drills", label: "Drills", icon: IconNotebook },
-  { link: "/search", label: "Search", icon: IconSearch },
-  { link: "/settings", label: "Settings", icon: IconSettings },
-];
-
 function Navigation() {
   const { classes, cx } = useStyles();
   const [active, setActive] = useState("Billing");
 
-  const links = data.map((item) => (
+  const links = navigationData.map((item) => (
     <Link passHref href={item.link} key={item.link}>
       <a
         className={cx(classes.link, {

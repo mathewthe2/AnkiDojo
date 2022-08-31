@@ -30,6 +30,7 @@ def create_flask_app(test_config=None, dev_mode=False):
     app.config.from_mapping(
         DEV_MODE=dev_mode,
         SECRET_KEY='dev',
+        JSON_SORT_KEYS=False,
         # DATABASE=os.path.join(instance_dir, 'card_mine.sqlite3'),
     )
 
