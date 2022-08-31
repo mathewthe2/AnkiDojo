@@ -29,9 +29,10 @@ const getPrimaryDeck = async () => await fetchAnki("api/primary_deck");
 const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
   const data = await fetchAnki("api/card_formats");
   return data.map((cardFormat: any) => {
+    const model:string = Object.keys(cardFormat)[0];
     return {
-      model: Object.keys(cardFormat)[0],
-      modelMap: cardFormat[Object.keys(cardFormat)[0]],
+      model: model,
+      modelMap: new Map(Object.entries(cardFormat[model]))
     };
   });
 };

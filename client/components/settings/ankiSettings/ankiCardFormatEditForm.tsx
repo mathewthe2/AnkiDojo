@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, Button, Box, Select, Table, ScrollArea } from "@mantine/core";
-import { fieldValueOptions } from "@/lib/anki";
+import { fieldValueOptions, addOrModifyCardFormat } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 
 function AnkiCardFormatEditForm({
@@ -8,6 +8,26 @@ function AnkiCardFormatEditForm({
 }: {
   cardFormat: AnkiCardFormat;
 }) {
+  const [newCardFormat, setNewCardFormat] = useState<AnkiCardFormat>(cardFormat);
+  
+  const updateCardFormat = () => {
+    addOrModifyCardFormat(newCardFormat);
+  };
+
+  const onSelectFieldValue = (fieldName: string, fieldValue: string) => {
+    const modelMap: Map<string, string> = newCardFormat.modelMap;
+    if (modelMap) {
+      if (fieldValue === "" && modelMap.has(fieldName)) {
+        modelMap.delete(fieldName);
+      } else {
+        modelMap.set(fieldName, fieldValue);
+      }
+    }
+    setNewCardFormat({
+      model: newCardFormat.model,
+      modelMap: modelMap || new Map<string, string>(),
+    });
+  };
 
   return (
     <Box>
@@ -20,7 +40,7 @@ function AnkiCardFormatEditForm({
             </tr>
           </thead>
           <tbody>
-            {Object.entries(cardFormat.modelMap).map(
+            {Array.from(cardFormat.modelMap.entries()).map(
               ([fieldName, fieldValue]) => (
                 <tr key={fieldName}>
                   <td>{fieldName}</td>
@@ -29,7 +49,10 @@ function AnkiCardFormatEditForm({
                       clearable
                       searchable
                       data={fieldValueOptions}
-                      value={fieldValue}
+                      defaultValue={fieldValue}
+                      onChange={(value) =>
+                        onSelectFieldValue(fieldName, value || "")
+                      }
                     ></Select>
                   </td>
                 </tr>
@@ -38,7 +61,7 @@ function AnkiCardFormatEditForm({
           </tbody>
         </Table>
       </ScrollArea>
-      <Button mt={20} fullWidth>
+      <Button mt={20} fullWidth onClick={updateCardFormat}>
         Save
       </Button>
       <Button mt={20} fullWidth variant="outline">
