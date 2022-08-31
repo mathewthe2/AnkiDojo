@@ -18,6 +18,18 @@ def get_anki_settings():
         anki_settings = json.load(f)
         return anki_settings
 
+def update_anki_settings(update_dict):
+    with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'r', encoding='utf-8') as f:
+        anki_settings = json.load(f)
+    
+    for key, value in update_dict.items():
+        anki_settings[key] = value
+
+    with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'w+', encoding='utf-8') as outfile:
+        json.dump(anki_settings, outfile, indent=4, ensure_ascii=False)
+    
+    return update_dict
+
 def update_anki_model_map(model_name, model_map):
     with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'r', encoding='utf-8') as f:
         anki_settings = json.load(f)
@@ -94,6 +106,9 @@ class AnkiHelper():
             return anki_settings["primary_deck"]
         else:
             return ""
+    
+    def update_primary_deck(self, primary_deck):
+        return update_anki_settings({'primary_deck': primary_deck})
 
     def get_notes(self, deck_name, offset=0, limit=10):
         note_ids = self.collection().find_notes('deck:"{}"'.format(deck_name))

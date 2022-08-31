@@ -93,10 +93,19 @@ def card_formats():
             result = ankiHelper.update_model_map(content["model"], {})
         return jsonify(result)
 
-@bp.route("/api/primary_deck")
-def get_anki_settings():
-    primary_deck = ankiHelper.get_primary_deck()
-    return jsonify(primary_deck)
+@bp.route("/api/primary_deck", methods=('GET', 'POST', 'DELETE'))
+def anki_primary_deck():
+    if request.method == 'GET':
+        primary_deck = ankiHelper.get_primary_deck()
+        return jsonify(primary_deck)
+    result = None
+    content = request.get_json()
+    if request.method == "POST":
+        if content and "primary_deck" in content:
+            result = ankiHelper.update_primary_deck(content["primary_deck"])
+        return jsonify(result)
+    if request.method == "DELETE":
+        return jsonify({}) 
 
 @bp.route("/api/fields")
 @bp.route("/api/fields/<string:model_name>")
