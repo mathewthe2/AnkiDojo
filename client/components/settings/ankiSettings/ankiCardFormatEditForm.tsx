@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, Button, Box, Select, Table, ScrollArea } from "@mantine/core";
-import { fieldValueOptions, addOrModifyCardFormat } from "@/lib/anki";
+import { fieldValueOptions } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import useDeleteCardFormat from "@/hooks/settings/ankiSettings/useDeleteCardFormat";
 import useUpdateCardFormat from "@/hooks/settings/ankiSettings/useUpdateCardFormat";
