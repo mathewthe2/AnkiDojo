@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Text, Button, Box, Select, Table, ScrollArea } from "@mantine/core";
 import { fieldValueOptions, addOrModifyCardFormat } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
+import useDeleteCardFormat from "@/hooks/settings/ankiSettings/useDeleteCardFormat";
+import useUpdateCardFormat from "@/hooks/settings/ankiSettings/useUpdateCardFormat";
 
 function AnkiCardFormatEditForm({
   cardFormat,
@@ -9,10 +11,16 @@ function AnkiCardFormatEditForm({
   cardFormat: AnkiCardFormat;
 }) {
   const [newCardFormat, setNewCardFormat] = useState<AnkiCardFormat>(cardFormat);
-  
-  const updateCardFormat = () => {
-    addOrModifyCardFormat(newCardFormat);
-  };
+
+  const updateCardFormat = useUpdateCardFormat(cardFormat);
+
+  const handleUpdateCardFormat = async() => updateCardFormat.mutate();
+
+  const deleteCardFormat= useDeleteCardFormat(cardFormat.model);
+
+  const handleDeleteCardFormat = async() => {
+    deleteCardFormat.mutate();
+  }
 
   const onSelectFieldValue = (fieldName: string, fieldValue: string) => {
     const modelMap: Map<string, string> = newCardFormat.modelMap;
@@ -61,10 +69,10 @@ function AnkiCardFormatEditForm({
           </tbody>
         </Table>
       </ScrollArea>
-      <Button mt={20} fullWidth onClick={updateCardFormat}>
+      <Button mt={20} fullWidth onClick={handleUpdateCardFormat}>
         Save
       </Button>
-      <Button mt={20} fullWidth variant="outline">
+      <Button mt={20} fullWidth variant="outline" onClick={handleDeleteCardFormat}>
         Delete
       </Button>
     </Box>

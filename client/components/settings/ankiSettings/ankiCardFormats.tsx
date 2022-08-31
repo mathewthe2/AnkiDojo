@@ -4,6 +4,8 @@ import { createStyles } from "@mantine/core";
 import { getCardFormats } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import AnkiCardFormatEditForm from "./ankiCardFormatEditForm";
+import { useQuery } from "react-query";
+import { AnkiSettingType } from "@/lib/anki";
 
 const useStyles = createStyles((theme) => ({
   paper: {
@@ -28,13 +30,14 @@ const useStyles = createStyles((theme) => ({
 }));
 function AnkiCardFormats() {
   const { classes, theme } = useStyles();
-  const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
+  // const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
+  const {data:cardFormats, isLoading:isLoadingCardFormats} = useQuery(AnkiSettingType.CardFormat, getCardFormats)
   const [opened, setOpened] = useState(false);
   const [activeCardFormat, setActiveCardFormat] = useState<AnkiCardFormat>();
 
-  useEffect(() => {
-    getCardFormats().then((cardFormats) => setCardFormats(cardFormats));
-  }, []);
+  // useEffect(() => {
+  //   getCardFormats().then((cardFormats) => setCardFormats(cardFormats));
+  // }, []);
 
   const selectModel = (cardFormat:AnkiCardFormat) => {
     setActiveCardFormat(cardFormat);
@@ -54,7 +57,7 @@ function AnkiCardFormats() {
         <AnkiCardFormatEditForm cardFormat={activeCardFormat!} />
       </Drawer>
       <ScrollArea mt={10} style={{ height: 500 }}>
-        {cardFormats.map((cardFormat) => (
+        {cardFormats?.map((cardFormat) => (
           <Card shadow="md" key={cardFormat.model} className={classes.paper}>
             <UnstyledButton
               style={{ width: "100%" }}

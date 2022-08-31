@@ -19,6 +19,7 @@
     "next": "12.2.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-query": "^3.39.2",
     "react-timer-hook": "^3.0.5",
     "use-sound": "^4.0.1",
     "wanakana": "^5.0.2"

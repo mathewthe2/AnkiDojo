@@ -6,7 +6,16 @@ import {
   ColorScheme,
 } from "@mantine/core";
 import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "react-query";
 import ApplicationContainer from "@/components/layout/applicationContainer";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+    },
+  },
+});
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props;
@@ -23,24 +32,26 @@ export default function App(props: AppProps) {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
-      <ColorSchemeProvider
-        colorScheme={colorScheme}
-        toggleColorScheme={toggleColorScheme}
-      >
-        <MantineProvider
-          withGlobalStyles
-          withNormalizeCSS
-          theme={{
-            /** Put your mantine theme override here */
-            colorScheme: colorScheme,
-            primaryColor: "pink",
-          }}
+      <QueryClientProvider client={queryClient}>
+        <ColorSchemeProvider
+          colorScheme={colorScheme}
+          toggleColorScheme={toggleColorScheme}
         >
-          <ApplicationContainer>
-            <Component {...pageProps} />
-          </ApplicationContainer>
-        </MantineProvider>
-      </ColorSchemeProvider>
+          <MantineProvider
+            withGlobalStyles
+            withNormalizeCSS
+            theme={{
+              /** Put your mantine theme override here */
+              colorScheme: colorScheme,
+              primaryColor: "pink",
+            }}
+          >
+            <ApplicationContainer>
+              <Component {...pageProps} />
+            </ApplicationContainer>
+          </MantineProvider>
+        </ColorSchemeProvider>
+      </QueryClientProvider>
     </>
   );
 }

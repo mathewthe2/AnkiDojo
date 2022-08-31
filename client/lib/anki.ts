@@ -1,9 +1,9 @@
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 
-const fetchAnki = async (endpoint: string, isJson: boolean = true) => {
+const fetchAnki = async (endpoint: AnkiSettingType | string, isJson: boolean = true) => {
   const requestHeaders: HeadersInit = new Headers();
   requestHeaders.set("xc-auth", process.env.ANKI_HOST as string);
-  const response = await fetch(`${process.env.ANKI_HOST}/${endpoint}`, {
+  const response = await fetch(`${process.env.ANKI_HOST}/api/${endpoint}`, {
     method: "GET",
     headers: requestHeaders,
   });
@@ -19,11 +19,9 @@ const fetchAnki = async (endpoint: string, isJson: boolean = true) => {
   }
 };
 
-const postAnki = async (endpoint: string, body: any) => {
-  const requestHeaders: HeadersInit = new Headers();
-  requestHeaders.set("xc-auth", process.env.ANKI_HOST as string);
-  const response = await fetch(`${process.env.ANKI_HOST}/${endpoint}`, {
-    method: "POST",
+const postAnki = async (endpoint: AnkiSettingType | string, body: any, method:string='POST') => {
+  const response = await fetch(`${process.env.ANKI_HOST}/api/${endpoint}`, {
+    method: method,
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
@@ -38,17 +36,17 @@ const postAnki = async (endpoint: string, body: any) => {
   }
 };
 
-const getDeckNames = async () => await fetchAnki("api/decks");
-const getModelNames = async () => await fetchAnki("api/models");
+const getDeckNames = async () => await fetchAnki(AnkiSettingType.Deck);
+const getModelNames = async () => await fetchAnki(AnkiSettingType.Model);
 const getModelFields = async (modelName: string) =>
-  await fetchAnki(`/api/fields/${modelName}`);
+  await fetchAnki(`fields/${modelName}`);
 
-const getPrimaryDeck = async () => await fetchAnki("api/primary_deck");
+const getPrimaryDeck = async () => await fetchAnki(AnkiSettingType.PrimaryDeck);
 const setPrimaryDeck = async (primaryDeck: string) =>
-  await postAnki("api/primary_deck", { primary_deck: primaryDeck });
+  await postAnki(AnkiSettingType.PrimaryDeck, {primary_deck: primaryDeck });
 
 const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
-  const data = await fetchAnki("api/card_formats");
+  const data = await fetchAnki(AnkiSettingType.CardFormat);
   return data.map((cardFormat: any) => {
     const model: string = Object.keys(cardFormat)[0];
     return {
@@ -57,12 +55,6 @@ const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
     };
   });
 };
-
-const addOrModifyCardFormat = async (cardFormat: AnkiCardFormat) =>
-  await postAnki("api/card_formats", {
-    model: cardFormat.model,
-    model_map: Object.fromEntries(cardFormat.modelMap),
-  });
 
 const fieldValueOptions = [
   "Expression",
@@ -78,6 +70,14 @@ const fieldValueOptions = [
   "Frequencies",
 ];
 
+enum AnkiSettingType {
+  CardFormat = 'card_formats',
+  Deck = "decks",
+  Field = "fields",
+  Model = "models",
+  PrimaryDeck = "primary_deck"
+}
+
 export {
   getDeckNames,
   getModelNames,
@@ -85,6 +85,7 @@ export {
   getPrimaryDeck,
   getCardFormats,
   setPrimaryDeck,
-  addOrModifyCardFormat,
   fieldValueOptions,
+  AnkiSettingType,
+  postAnki
 };

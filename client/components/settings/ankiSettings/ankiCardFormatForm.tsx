@@ -4,9 +4,9 @@ import {
   fieldValueOptions,
   getModelNames,
   getModelFields,
-  addOrModifyCardFormat,
 } from "@/lib/anki";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
+import useAddCardFormat from "@/hooks/settings/ankiSettings/useAddCardFormat";
 
 function AnkiCardFormatForm() {
   const [modelNames, setModelNames] = useState([]);
@@ -27,6 +27,13 @@ function AnkiCardFormatForm() {
     }
   }, [cardFormat?.model]);
 
+  const addCardFormat = useAddCardFormat(cardFormat!);
+  const handleAddCardFormat = async() => {
+    if (cardFormat) {
+      addCardFormat.mutate();
+    }
+  };
+
   const onSelectFieldValue = (fieldName: string, fieldValue: string) => {
     const modelMap = cardFormat?.modelMap;
     if (modelMap) {
@@ -40,12 +47,6 @@ function AnkiCardFormatForm() {
       model: cardFormat?.model || "",
       modelMap: modelMap || new Map<string, string>(),
     });
-  };
-
-  const addCardFormat = () => {
-    if (cardFormat) {
-      addOrModifyCardFormat(cardFormat);
-    }
   };
 
   return (
@@ -97,7 +98,7 @@ function AnkiCardFormatForm() {
           </tbody>
         </Table>
       </ScrollArea>
-      <Button mt={20} fullWidth onClick={() => addCardFormat()}>
+      <Button mt={20} fullWidth onClick={handleAddCardFormat}>
         Add Format
       </Button>
     </Box>
