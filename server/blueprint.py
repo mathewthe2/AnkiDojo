@@ -62,10 +62,6 @@ def get_app(path):
 def redirect_settings():
      return redirect("/settings.html")
 
-@bp.route("/drills")
-def redirect_drills():
-     return redirect("/drills.html")
-    
 @bp.route("/api/decks")
 def get_decks():
     deck_names = ankiHelper.get_deck_names()
@@ -85,12 +81,12 @@ def card_formats():
     result = None
     content = request.get_json()
     if request.method == "POST":
-        if content and "model" in content and "model_map" in content:
-            result = ankiHelper.update_model_map(content["model"], content["model_map"])
+        if content and "model_name" in content and "model_map" in content:
+            result = ankiHelper.update_model_map(content["model_name"], content["model_map"])
         return jsonify(result)
     if request.method == 'DELETE':
-        if content and "model" in content:
-            result = ankiHelper.update_model_map(content["model"], {})
+        if content and "model_name" in content:
+            result = ankiHelper.update_model_map(content["model_name"], {})
         return jsonify(result)
 
 @bp.route("/api/primary_deck", methods=('GET', 'POST', 'DELETE'))
@@ -113,14 +109,15 @@ def get_fields(model_name=None):
     field_names = ankiHelper.get_model_field_names(model_name)
     return jsonify(field_names)
 
-@bp.route("/api/reader")
-@bp.route("/api/reader/<string:deck_name>")
-def reader(deck_name=None):
+@bp.route("/api/notes")
+def search_notes():
+    keyword = request.args.get('keyword', type=str)
+    deck_name = request.args.get('deck_name', type=str, default='')
     offset = request.args.get('offset', type=int, default=0)
     limit = request.args.get('limit', type=int, default=10)
-    notes = ankiHelper.get_notes(deck_name, offset, limit)
+    notes = ankiHelper.search_notes(keyword, deck_name, offset, limit)
     return jsonify(notes)
-
+    
 @bp.route("/api/apps")
 def get_apps():
     apps = userApps.get_apps()

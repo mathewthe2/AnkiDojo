@@ -45,7 +45,7 @@ function AnkiCardFormats() {
         opened={opened}
         position="left"
         onClose={() => setOpened(false)}
-        title={<Text weight={700}>{activeCardFormat?.model}</Text>}
+        title={<Text weight={700}>{activeCardFormat?.modelName}</Text>}
         padding="md"
         size="xl"
       >
@@ -53,12 +53,12 @@ function AnkiCardFormats() {
       </Drawer>
       <ScrollArea mt={10} style={{ height: 500 }}>
         {cardFormats?.map((cardFormat) => (
-          <Card shadow="md" key={cardFormat.model} className={classes.paper}>
+          <Card shadow="md" key={cardFormat.modelName} className={classes.paper}>
             <UnstyledButton
               style={{ width: "100%" }}
               onClick={() => selectModel(cardFormat)}
             >
-              <Text>{cardFormat.model}</Text>
+              <Text>{cardFormat.modelName}</Text>
             </UnstyledButton>
           </Card>
         ))}

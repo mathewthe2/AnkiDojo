@@ -1,5 +1,5 @@
 export default interface AnkiCardFormat {
-    readonly model: string;
+    readonly modelName: string;
     readonly modelMap: Map<string, string>;
   }
   

@@ -5,7 +5,7 @@ import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 
 const addCardFormat = async (cardFormat: AnkiCardFormat) =>
   await postAnki(AnkiSettingType.CardFormat, {
-    model: cardFormat.model,
+    model_name: cardFormat.modelName,
     model_map: Object.fromEntries(cardFormat.modelMap),
   });
 

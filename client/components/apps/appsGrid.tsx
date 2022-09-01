@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Text,
   Image,
-  Center,
-  Stack,
+  Tabs,
   UnstyledButton,
   Card,
   Paper,
@@ -12,6 +11,7 @@ import {
   Grid,
   createStyles,
 } from "@mantine/core";
+import { IconUser, IconPhoto, IconMessageCircle, IconSettings } from '@tabler/icons';
 import Link from "next/link";
 import { getUserApps, getAppIconUrl } from "@/lib/apps";
 import UserAppInterface from "@/interfaces/apps/UserAppInterface";
@@ -56,7 +56,13 @@ function AppsGrid() {
 
   return (
     <>
-      <Title order={3}>Apps</Title>
+      {/* <Title order={3}>Apps</Title> */}
+      <Tabs defaultValue="myApps">
+      <Tabs.List>
+        <Tabs.Tab value="myApps" icon={<IconUser size={14} />}>My Apps</Tabs.Tab>
+        <Tabs.Tab value="communityApps" icon={<IconMessageCircle size={14} />}>Community Apps</Tabs.Tab>
+      </Tabs.List>
+      <Tabs.Panel value="myApps" pt="xs">
       <Card shadow="xs" p="md" className={classes.card}>
         <SimpleGrid cols={3} mt="md">
           {userApps.map((userApp) => (
@@ -96,6 +102,13 @@ function AppsGrid() {
           ))}
         </SimpleGrid>
       </Card>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="communityApps" pt="xs">
+        Community Apps
+      </Tabs.Panel>
+    </Tabs>
+      
     </>
   );
 }

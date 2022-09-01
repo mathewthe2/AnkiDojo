@@ -16,6 +16,9 @@ class Settings():
         with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'w+', encoding='utf-8') as outfile:
             json.dump(self.anki_settings, outfile, indent=4, ensure_ascii=False)
 
+    def get_models(self):
+        return list(self.anki_settings['model_maps'])
+
     def update_anki_settings(self, update_dict):
         for key, value in update_dict.items():
             self.anki_settings[key] = value
@@ -35,3 +38,9 @@ class Settings():
 
         self._write_to_file()
         return model_name
+
+# s = Settings()
+# models = s.get_models()
+# models = []
+# s = ' OR '.join(['"note:{}"'.format(model) for model in models])
+# print(s)

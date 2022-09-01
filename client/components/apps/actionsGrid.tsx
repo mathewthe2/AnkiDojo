@@ -16,8 +16,8 @@ import Link from "next/link";
 
 const mockdata = [
   { title: "Drills", icon: IconNotebook, color: "pink", href:"/drills" },
-  { title: "Search", icon: IconSearch, color: "indigo", href:"" },
   { title: "Reader", icon: IconBook, color: "teal", href:"" },
+  { title: "Search", icon: IconSearch, color: "indigo", href:"" },
 ];
 
 const useStyles = createStyles((theme) => ({

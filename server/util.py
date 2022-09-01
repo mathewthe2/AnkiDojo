@@ -78,16 +78,23 @@ class AnkiHelper():
     def update_primary_deck(self, primary_deck):
         return self.settings.update_anki_settings({'primary_deck': primary_deck})
 
-    def get_notes(self, deck_name, offset=0, limit=10):
-        note_ids = self.collection().find_notes('deck:"{}"'.format(deck_name))
+    def search_notes(self, keyword, deck_name='', offset=0, limit=10):
+        models = self.settings.get_models()
+        model_filter_string = '({})'.format(' OR '.join(['"note:{}"'.format(model) for model in models])) if models else ''
+        query_string = keyword
+        if model_filter_string:
+            query_string += ' ' + model_filter_string
+        if deck_name:
+            query_string = deck_name + ' ' + query_string
+        note_ids = self.collection().find_notes(query_string)
+        # note_ids = self.collection().find_notes('deck:"{}" {} {}'.format(deck_name, keyword, model_filter_string))
         note_ids_requested = note_ids[offset:offset+limit]
         result = []
         for note_id in note_ids_requested:
             try:
                 note = self.collection().get_note(note_id)
                 model = note.model()
-
-                model_maps = get_reader_model_maps()
+                model_maps = self.settings.anki_settings['model_maps']
                 if model['name'] in model_maps:
                     field_map = model_maps[model['name']]
                     fields = {}
@@ -122,6 +129,7 @@ class AnkiHelper():
                 result.append({})   
         return {
             "total": len(note_ids),
+            "query": query_string,
             "offset": offset,
             "limit": limit,
             "data": result

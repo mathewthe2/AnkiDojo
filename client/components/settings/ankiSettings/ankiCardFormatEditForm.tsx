@@ -18,14 +18,14 @@ function AnkiCardFormatEditForm({
   const [fieldNames, setFieldNames] = useState<string[]>([]);
 
     useEffect(() => {
-      getModelFields(cardFormat?.model).then((fieldNames:string[]) => setFieldNames(fieldNames))
+      getModelFields(cardFormat?.modelName).then((fieldNames:string[]) => setFieldNames(fieldNames))
     }, []);
 
   const updateCardFormat = useUpdateCardFormat(cardFormat);
 
   const handleUpdateCardFormat = async () => updateCardFormat.mutate();
 
-  const deleteCardFormat = useDeleteCardFormat(cardFormat.model, onDeleteCallback);
+  const deleteCardFormat = useDeleteCardFormat(cardFormat.modelName, onDeleteCallback);
 
   const handleDeleteCardFormat = async () => {
     deleteCardFormat.mutate();
@@ -41,7 +41,7 @@ function AnkiCardFormatEditForm({
       }
     }
     setNewCardFormat({
-      model: newCardFormat.model,
+      modelName: newCardFormat.modelName,
       modelMap: modelMap || new Map<string, string>(),
     });
   };

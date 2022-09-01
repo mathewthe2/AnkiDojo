@@ -48,13 +48,27 @@ const setPrimaryDeck = async (primaryDeck: string) =>
 const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
   const data = await fetchAnki(AnkiSettingType.CardFormat);
   return data.map((cardFormat: any) => {
-    const model: string = Object.keys(cardFormat)[0];
+    const modelName: string = Object.keys(cardFormat)[0];
     return {
-      model: model,
-      modelMap: new Map(Object.entries(cardFormat[model])),
+      modelName: modelName,
+      modelMap: new Map(Object.entries(cardFormat[modelName])),
     };
   });
 };
+
+enum FieldValueType {
+  Expression = "Expression",
+  Reading = "Reading",
+  Glossary = "Glossary",
+  GlossaryBrief = "Glossary Brief",
+  Audio = "Audio",
+  Sentence = "Sentence",
+  SentenceAudio = "Sentence Audio",
+  SentenceTranslation = "Sentence Translation",
+  Picture = "Picture",
+  PitchAccent = "Pitch Accent",
+  Frequencies = "Frequencies"
+}
 
 const fieldValueOptions = [
   "Expression",
@@ -87,5 +101,7 @@ export {
   setPrimaryDeck,
   fieldValueOptions,
   AnkiSettingType,
+  FieldValueType,
+  fetchAnki,
   postAnki
 };

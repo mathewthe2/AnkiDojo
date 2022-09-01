@@ -18,14 +18,14 @@ function AnkiCardFormatForm({onCreateCallback}: { onCreateCallback: () => void})
   }, []);
 
   useEffect(() => {
-    if (cardFormat?.model) {
-      getModelFields(cardFormat?.model).then((fieldNames) =>
+    if (cardFormat?.modelName) {
+      getModelFields(cardFormat?.modelName).then((fieldNames) =>
         setFieldNames(fieldNames)
       );
     } else {
       setFieldNames([]);
     }
-  }, [cardFormat?.model]);
+  }, [cardFormat?.modelName]);
 
   const addCardFormat = useAddCardFormat(cardFormat!, onCreateCallback);
   
@@ -45,7 +45,7 @@ function AnkiCardFormatForm({onCreateCallback}: { onCreateCallback: () => void})
       }
     }
     setCardFormat({
-      model: cardFormat?.model || "",
+      modelName: cardFormat?.modelName || "",
       modelMap: modelMap || new Map<string, string>(),
     });
   };
@@ -73,7 +73,7 @@ function AnkiCardFormatForm({onCreateCallback}: { onCreateCallback: () => void})
           })}
           onChange={(modelName) =>
             setCardFormat({
-              model: modelName!,
+              modelName: modelName!,
               modelMap: new Map<string, string>(),
             })
           }
