@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.5fcfc205.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nihongo Shooter</title>
+  <meta name="description" content="Zap aliens in space to learn Japanese/Spanish/French/German/... vocabulary.">
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-T9X33DV681"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-T9X33DV681');
+  </script>
+
+  <!-- Using Noto JP because the Windows font looked very different from the mac one.
+       Which caused the buttons in the menu to look stretched vertically.
+   -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="./assets/index.8f47add8.js"></script>
+  <link rel="stylesheet" href="./assets/index.01718e8f.css">
+</head>
+
+<body>
+  <h1>Nihongo Shooter</h1>
+  <p>
+    Speed run learning a language. I made this game because animations in Duolingo slowed me down.
+    You can learn Spanish, French, German, Italian, Japanese, Korean, Portuguese, Russian, Chinese, Hebrew,
+    or you can learn English if you know one of those languages.
+    See <a href="https://github.com/ubershmekel/nihongo-shooter">source on github</a>. Note you can use the
+    arrow and 1, 2, 3 keys to shoot with a keyboard.</p>
+  <p>
+    If you'd like updates on new developments of mine, follow me on <a
+      href="https://twitter.com/ubershmekel">twitter</a> or <a
+      href="https://ubershmekel.substack.com/p/nihongo-shooter">substack</a>.
+  </p>
+  <div class="window-controls">
+    <button onclick="window.toggleFullscreen()">fullscreen</button>
+    <button onclick="_game.sound.mute = !_game.sound.mute">mute</button>
+    <button onclick="window.location.reload(true)">refresh</button>
+  </div>
+  <div id="app"></div>
+  
+</body>
+
+</html>
