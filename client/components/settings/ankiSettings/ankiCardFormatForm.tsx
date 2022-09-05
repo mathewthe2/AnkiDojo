@@ -62,6 +62,7 @@ function AnkiCardFormatForm({onCreateCallback}: { onCreateCallback: () => void})
       {modelNames && (
         <Select
           searchable
+          initiallyOpened
           mt={10}
           label="Select Model"
           placeholder="Select model"

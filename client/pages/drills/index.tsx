@@ -9,6 +9,7 @@ import {
 import { IconPlus, IconDotsVertical, IconDots } from "@tabler/icons";
 import Link from "next/link";
 import { DrillType } from "@/interfaces/drill/DrillType";
+import DrillList from "@/components/drill/DrillList";
 
 const data = [
   {
@@ -34,26 +35,7 @@ function Drills() {
       <Button leftIcon={<IconPlus size={14} />} variant="filled" mb={20}>
         Create Drill
       </Button>
-      {data.map((drill) => (
-        <>
-          <Paper shadow="md" p="md" mb={10}>
-            <Group position="apart">
-              <Text weight={700}>{drill.title}</Text>
-              <Group>
-                <Link
-                  href={`/drills/${drill.id}/session?type=${drill.defaultType}`}
-                  passHref
-                >
-                  <Button component="a" variant="light">Start</Button>
-                </Link>
-                <ActionIcon>
-                  <IconDotsVertical size={18} />
-                </ActionIcon>
-              </Group>
-            </Group>
-          </Paper>
-        </>
-      ))}
+      <DrillList drills={data} />
     </Container>
   );
 }

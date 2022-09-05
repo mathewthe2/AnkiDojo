@@ -8,7 +8,7 @@ import { useQuery } from "react-query";
 import { AnkiSettingType } from "@/lib/anki";
 
 const useStyles = createStyles((theme) => ({
-  paper: {
+  card: {
     backgroundColor:
       theme.colorScheme === "dark"
         ? theme.colors.dark[6]
@@ -16,6 +16,7 @@ const useStyles = createStyles((theme) => ({
     padding: 20,
     marginTop: 10,
     transition: "box-shadow 150ms ease, transform 150ms ease",
+    cursor: 'pointer',
 
     "&:hover": {
       boxShadow: `${theme.shadows.md} !important`,
@@ -53,7 +54,7 @@ function AnkiCardFormats() {
       </Drawer>
       <ScrollArea mt={10} style={{ height: 500 }}>
         {cardFormats?.map((cardFormat) => (
-          <Card shadow="md" key={cardFormat.modelName} className={classes.paper}>
+          <Card shadow="md" key={cardFormat.modelName} className={classes.card}>
             <UnstyledButton
               style={{ width: "100%" }}
               onClick={() => selectModel(cardFormat)}
