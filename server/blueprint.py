@@ -111,11 +111,13 @@ def get_fields(model_name=None):
 
 @bp.route("/api/notes")
 def search_notes():
-    keyword = request.args.get('keyword', type=str)
+    keyword = request.args.get('keyword', type=str, default='')
     deck_name = request.args.get('deck_name', type=str, default='')
+    shuffle = request.args.get('shuffle', type=bool, default=False)
+    extra_filter = request.args.get('extra_filter', type=str, default='')
     offset = request.args.get('offset', type=int, default=0)
     limit = request.args.get('limit', type=int, default=10)
-    notes = ankiHelper.search_notes(keyword, deck_name, offset, limit)
+    notes = ankiHelper.search_notes(keyword, deck_name, extra_filter, shuffle, offset, limit)
     return jsonify(notes)
     
 @bp.route("/api/apps")

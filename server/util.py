@@ -1,6 +1,7 @@
 from aqt import mw
 import os
 import json
+import random
 from .settings import Settings
 
 # Paths
@@ -78,16 +79,20 @@ class AnkiHelper():
     def update_primary_deck(self, primary_deck):
         return self.settings.update_anki_settings({'primary_deck': primary_deck})
 
-    def search_notes(self, keyword, deck_name='', offset=0, limit=10):
+    def search_notes(self, keyword, deck_name='', extra_filter='', shuffle=False, offset=0, limit=10):
         models = self.settings.get_models()
         model_filter_string = '({})'.format(' OR '.join(['"note:{}"'.format(model) for model in models])) if models else ''
         query_string = keyword
         if model_filter_string:
             query_string += ' ' + model_filter_string
         if deck_name:
-            query_string = deck_name + ' ' + query_string
+            query_string = 'deck:{} {}'.format(deck_name, query_string)
+        if extra_filter:
+            query_string += ' ' + extra_filter
         note_ids = self.collection().find_notes(query_string)
         # note_ids = self.collection().find_notes('deck:"{}" {} {}'.format(deck_name, keyword, model_filter_string))
+        if shuffle:
+            random.shuffle(note_ids)
         note_ids_requested = note_ids[offset:offset+limit]
         result = []
         for note_id in note_ids_requested:
