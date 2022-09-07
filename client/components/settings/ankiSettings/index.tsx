@@ -12,6 +12,7 @@ import { IconPlus } from "@tabler/icons";
 import AnkiPrimaryDeck from "./ankiPrimaryDeck";
 import AnkiCardFormats from "./ankiCardFormats";
 import AnkiCardFormatForm from "./ankiCardFormatForm";
+import AnkiEnableSuspendedSwitch from "./ankiEnableSuspendedSwitch";
 
 const useStyles = createStyles((theme) => ({
   title: {
@@ -30,6 +31,7 @@ function AnkiSettings() {
         Anki
       </Text>
      <AnkiPrimaryDeck/>
+     <AnkiEnableSuspendedSwitch/>
      <Divider mt={20} />
      <Modal
         opened={opened}

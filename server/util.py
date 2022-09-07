@@ -79,16 +79,29 @@ class AnkiHelper():
     def update_primary_deck(self, primary_deck):
         return self.settings.update_anki_settings({'primary_deck': primary_deck})
 
+    def get_enable_suspended(self):
+        anki_settings = self.settings.anki_settings
+        if "enable_suspended" in anki_settings:
+            return anki_settings["enable_suspended"]
+        else:
+            return True
+    
+    def update_enable_suspended(self, enable_suspended):
+        return self.settings.update_anki_settings({'enable_suspended': enable_suspended})
+
     def search_notes(self, keyword, deck_name='', extra_filter='', shuffle=False, offset=0, limit=10):
         models = self.settings.get_models()
         model_filter_string = '({})'.format(' OR '.join(['"note:{}"'.format(model) for model in models])) if models else ''
         query_string = keyword
+        enable_suspended = self.get_enable_suspended()
         if model_filter_string:
             query_string += ' ' + model_filter_string
         if deck_name:
             query_string = 'deck:{} {}'.format(deck_name, query_string)
         if extra_filter:
             query_string += ' ' + extra_filter
+        if not enable_suspended:
+            query_string += ' ' '-is:suspended'
         note_ids = self.collection().find_notes(query_string)
         # note_ids = self.collection().find_notes('deck:"{}" {} {}'.format(deck_name, keyword, model_filter_string))
         if shuffle:

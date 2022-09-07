@@ -11,12 +11,13 @@ import {
   IconNotebook,
   IconSearch,
   IconBook,
+  IconMusic,
 } from "@tabler/icons";
 import Link from "next/link";
 
 const mockdata = [
   { title: "Drills", icon: IconNotebook, color: "pink", href:"/drills" },
-  { title: "Reader", icon: IconBook, color: "teal", href:"" },
+  { title: "Jukebox", icon: IconMusic, color: "teal", href:"" },
   { title: "Search", icon: IconSearch, color: "indigo", href:"" },
 ];
 

@@ -1,7 +1,9 @@
-import re
+import os, re
 import requests
+
 from .util import AnkiHelper
 from .user_apps import UserApps
+from .japanese import Japanese
 
 from flask import (
     Blueprint, current_app, jsonify, redirect, request, send_from_directory
@@ -103,6 +105,18 @@ def anki_primary_deck():
     if request.method == "DELETE":
         return jsonify({}) 
 
+@bp.route("/api/enable_suspended", methods=('GET', 'POST'))
+def anki_enable_suspended():
+    if request.method == 'GET':
+        enable_suspended = ankiHelper.get_enable_suspended()
+        return jsonify(enable_suspended)
+    result = None
+    content = request.get_json()
+    if request.method == "POST":
+        if content and "enable_suspended" in content:
+            result = ankiHelper.update_enable_suspended(content["enable_suspended"])
+        return jsonify(result)
+
 @bp.route("/api/fields")
 @bp.route("/api/fields/<string:model_name>")
 def get_fields(model_name=None):
@@ -125,3 +139,38 @@ def get_apps():
     apps = userApps.get_apps()
     return jsonify(apps)
     
+@bp.route("/api/terms", methods=('GET', 'POST'))
+def terms():
+    language = Japanese() # global declaration does not work for some reason
+    result = []
+    if request.method == 'GET':
+        keyword = request.args.get('keyword', type=str, default='')
+        definitions, length = language.translator.findTerm(keyword)
+        for exp in definitions:
+            exp['glossary'] = list(exp['glossary'])
+            result.append(exp)
+    elif request.method == "POST":
+        content = request.get_json()
+        if content and "keywords" in content:
+            keywords = content["keywords"]
+            include_pitch_graph = "include_pitch_graph" in content
+            for keyword in keywords:
+                definitions, length = language.translator.findTerm(keyword)
+                if definitions:
+                    definitions[0]['glossary'] = list(definitions[0]['glossary'])
+                    if (include_pitch_graph):
+                        expression = definitions[0]['expression']
+                        reading = definitions[0]['reading']
+                        definitions[0]['pitch_svg'] = language.pitch.get_svg(expression, reading)
+                    result.append(definitions[0])
+                else:
+                    empty_definition = {
+                        "expression": "",
+                        "reading": "",
+                        "glossary": [],
+                        "tags": [],
+                        "source": "",
+                        "rules": []
+                    }
+                    result.append(empty_definition)
+    return jsonify(result)

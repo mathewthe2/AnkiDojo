@@ -45,6 +45,10 @@ const getPrimaryDeck = async () => await fetchAnki(AnkiSettingType.PrimaryDeck);
 const setPrimaryDeck = async (primaryDeck: string) =>
   await postAnki(AnkiSettingType.PrimaryDeck, {primary_deck: primaryDeck });
 
+const getEnableSuspended = async () => await fetchAnki(AnkiSettingType.EnableSuspended);
+  const setEnableSuspended = async (enableSuspended: boolean) =>
+    await postAnki(AnkiSettingType.EnableSuspended, {enable_suspended: enableSuspended });
+
 const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
   const data = await fetchAnki(AnkiSettingType.CardFormat);
   return data.map((cardFormat: any) => {
@@ -89,7 +93,8 @@ enum AnkiSettingType {
   Deck = "decks",
   Field = "fields",
   Model = "models",
-  PrimaryDeck = "primary_deck"
+  PrimaryDeck = "primary_deck",
+  EnableSuspended = "enable_suspended"
 }
 
 export {
@@ -97,8 +102,10 @@ export {
   getModelNames,
   getModelFields,
   getPrimaryDeck,
+  getEnableSuspended,
   getCardFormats,
   setPrimaryDeck,
+  setEnableSuspended,
   fieldValueOptions,
   AnkiSettingType,
   FieldValueType,

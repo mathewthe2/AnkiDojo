@@ -2,6 +2,7 @@ import {
   Group,
   Button,
   Text,
+  Tabs,
   Container,
   ActionIcon,
   Paper,

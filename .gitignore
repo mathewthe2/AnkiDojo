@@ -2,3 +2,7 @@
 client/.next/
 client/node_modules/*
 server/app/*
+
+# python
+*.pycache
+*.pyc
