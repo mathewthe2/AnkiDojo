@@ -5,12 +5,17 @@ export interface NoteAddInterface {
     tags: string[]
 }
 
+const ADD_NOTE_OPTIONS = {
+  'allowDuplicate': true
+}
+
 export const addNotesToAnki = async (notesToAdd:NoteAddInterface[]) => {
     const body = {
         notes: notesToAdd.map(note=>{
             return {
                 ...note,
-                fields: Object.fromEntries(note.fields)
+                fields: Object.fromEntries(note.fields),
+                options: ADD_NOTE_OPTIONS
             }
         })
     }
