@@ -18,10 +18,12 @@ import { getNotes, SearchType } from "@/lib/search/notes";
 import { useQuery } from "react-query";
 import SearchResults from "@/components/search/searchResults";
 import SearchSettings from "@/components/search/searchSettings";
+import DictionaryResults from "@/components/search/dictionaryResults";
 
 const DISPLAY_LOADER_DELAY = 1500;
 
 function Search() {
+  const [activeTab, setActiveTab] = useState<string | null>("anki");
   const [keyword, setKeyword] = useState("");
   const [isLongLoad, setIsLongLoad] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -38,9 +40,13 @@ function Search() {
     return () => clearInterval(intervalId);
   }, [isLoadingNotes]);
 
+  // const switchTabs = (tab: string | null) => {
+  //   setActiveTab(tab);
+  // };
+
   return (
     <Container mt={50}>
-      <Tabs defaultValue="anki" onChange={() => console.log("hello")}>
+      <Tabs value={activeTab} onTabChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="anki" icon={<IconPhoto size={14} />}>
             Anki
@@ -60,7 +66,7 @@ function Search() {
         </Tabs.List>
 
         <Tabs.Panel value="anki" pt="xs">
-           {/* Anki tab content */}
+          {/* Anki tab content */}
         </Tabs.Panel>
 
         <Tabs.Panel value="dictionary" pt="xs">
@@ -93,7 +99,12 @@ function Search() {
       >
         <SearchSettings />
       </Drawer>
-      <SearchResults notes={noteData?.data || []} keyword={keyword} />
+      {activeTab === "anki" && (
+        <SearchResults notes={noteData?.data || []} keyword={keyword} />
+      )}
+      {activeTab == "dictionary" && (
+        <DictionaryResults keyword={keyword} />
+      )}
     </Container>
   );
 }
