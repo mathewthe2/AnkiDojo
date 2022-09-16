@@ -17,7 +17,6 @@ function AnkiEnableSuspendedSwitch() {
     <>
       {!isLoadingEnableSuspended && (
         <Switch
-          mt={20}
           disabled={isLoadingEnableSuspended}
           checked={enableSuspended}
           onChange={handleEnableSuspended}

@@ -16,7 +16,8 @@ import {
 } from "@mantine/core";
 import CardBuilderPreviewProps from "@/interfaces/card_builder/CardBuilderPreviewProps";
 import { getTermDefinitions, Definition } from "@/lib/japanese";
-import { getDeckNames, getPrimaryDeck, getCardFormats } from "@/lib/anki";
+import { getDeckNames, getPrimaryDeck, getCardFormats, FieldValueType } from "@/lib/anki";
+import { NoteAddInterface, addNotesToAnki } from "@/lib/card-builder/notes";
 import { IconX } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
@@ -48,7 +49,7 @@ const useStyles = createStyles((theme) => ({
 
 function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
   const [deckNames, setDeckNames] = useState([]);
-  const [primaryDeck, setPrimaryDeck] = useState("");
+  const [selectedDeckName, setSelectedDeckName] = useState('');
   const [cardFormatModelName, setCardFormatModelName] = useState("");
   const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
   const [expressionTerms, setExpressionTerms] = useState<ExpressionTerm[]>([]);
@@ -56,7 +57,7 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
 
   useEffect(() => {
     getDeckNames().then((deckNames) => setDeckNames(deckNames.sort()));
-    getPrimaryDeck().then((primaryDeck) => setPrimaryDeck(primaryDeck));
+    getPrimaryDeck().then((primaryDeck) => setSelectedDeckName(primaryDeck));
     getCardFormats().then((cardFormats) => {
       setCardFormats(cardFormats);
       if (cardFormats.length > 0) {
@@ -80,6 +81,43 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
   const updateTextOfTermDefinitions = (index: number, newValue: string) => {
     // expressionTerms[index]
   };
+
+  const bulkAddToAnki = () => {
+    const modelMap = cardFormats.find(cardFormat=>cardFormat.modelName === cardFormatModelName)?.modelMap;
+    // map fields to corresponding names in card format
+    const fieldMaps:Map<string, string>[] = [];
+    expressionTerms.forEach(expressionTerm=>{
+      const fieldMap = new Map<string, string>;
+      modelMap?.forEach((value: string, key: string) => {
+        switch(value) {
+          case FieldValueType.Expression:
+            fieldMap.set(key, expressionTerm.definition.expression);
+            break;
+          case FieldValueType.Reading:
+            fieldMap.set(key, expressionTerm.definition.reading);
+            break;
+          case FieldValueType.Glossary:
+            fieldMap.set(key, expressionTerm.definition.glossary[0]); // TODO: change selected glossary
+            break;
+          case FieldValueType.PitchAccent:
+            fieldMap.set(key, expressionTerm.definition.pitch_svg[0]); // TODO: change selected pitch
+            break;
+          default:
+            break;
+        };
+      });
+      fieldMaps.push(fieldMap);
+    })
+    const notesToAdd:NoteAddInterface[] = fieldMaps.map(fieldMap=>{
+      return {
+        deckName: selectedDeckName,
+        modelName: cardFormatModelName,
+        fields: fieldMap,
+        tags: []
+      }
+    })
+    addNotesToAnki(notesToAdd);
+  }
 
   return (
     <>
@@ -183,15 +221,16 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
               value: deckName,
             };
           })}
-          value={primaryDeck}
-          onChange={(primaryDeck: string) => setPrimaryDeck(primaryDeck)}
+          value={selectedDeckName}
+          onChange={(deckName: string) => setSelectedDeckName(deckName)}
         ></Select>
         <Select
           label="Card Format"
           value={cardFormatModelName}
           data={cardFormats.map((cardFormat) => cardFormat.modelName)}
+          onChange={(modelName: string) => setCardFormatModelName(modelName)}
         ></Select>
-        <Button mt={20} fullWidth>
+        <Button mt={20} fullWidth onClick={bulkAddToAnki}>
           Bulk Add
         </Button>
       </Card>

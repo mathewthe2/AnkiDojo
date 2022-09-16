@@ -2,10 +2,11 @@ import { useState } from "react";
 import {
   Modal,
   Box,
-  Divider,
+  Tabs,
   Button,
   Group,
   Text,
+  Card,
   createStyles,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons";
@@ -19,6 +20,12 @@ const useStyles = createStyles((theme) => ({
     fontFamily: `Greycliff CF, ${theme.fontFamily}`,
     fontWeight: 700,
   },
+  card: {
+    backgroundColor:
+      theme.colorScheme === "dark"
+        ? theme.colors.dark[6]
+        : theme.colors.gray[0],
+  },
 }));
 
 function AnkiSettings() {
@@ -30,24 +37,36 @@ function AnkiSettings() {
       <Text mb={20} className={classes.title}>
         Anki
       </Text>
-     <AnkiPrimaryDeck/>
-     <AnkiEnableSuspendedSwitch/>
-     <Divider mt={20} />
-     <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title="New Anki Card Format"
-      >
-        <AnkiCardFormatForm onCreateCallback={()=>setOpened(false)} />
-      </Modal>
-      <Text mt={10} size="sm">Card Formats</Text>
-      <Button mt={20} onClick={() => setOpened(true)}>
-        <Group>
-          <IconPlus />
-          Add Card Format
-        </Group>
-      </Button>
-      <AnkiCardFormats/>
+      <AnkiPrimaryDeck />
+      <Tabs mt={20} defaultValue="card-formats">
+        <Tabs.List>
+          <Tabs.Tab value="card-formats">Card Formats</Tabs.Tab>
+          <Tabs.Tab value="advanced">Advanced</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="card-formats" pt="xs">
+          <Modal
+            opened={opened}
+            onClose={() => setOpened(false)}
+            title="New Anki Card Format"
+          >
+            <AnkiCardFormatForm onCreateCallback={() => setOpened(false)} />
+          </Modal>
+          <Button mt={10} onClick={() => setOpened(true)}>
+            <Group>
+              <IconPlus />
+              Add Card Format
+            </Group>
+          </Button>
+          <AnkiCardFormats />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="advanced" pt="xs">
+          <Card className={classes.card}>
+            <AnkiEnableSuspendedSwitch />
+          </Card>
+        </Tabs.Panel>
+      </Tabs>
     </Box>
   );
 }

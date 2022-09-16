@@ -3,6 +3,7 @@ import os
 import json
 import random
 from .settings import Settings
+from .anki_connect import AnkiConnect
 
 # Paths
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', 'user_files')
@@ -23,6 +24,7 @@ except:
 class AnkiHelper():
     def __init__(self):
         self.settings = Settings()
+        self.ankiConnect = AnkiConnect()
 
     def collection(self):
         collection = mw.col
@@ -152,3 +154,12 @@ class AnkiHelper():
             "limit": limit,
             "data": result
         }
+
+    def add_notes(self, notes):
+        # TODO: add media
+        for note in notes:
+            # ankiConnectNote = {
+            #     'fields': note['fields']
+            # }
+            self.ankiConnect.addNote(note)
+    

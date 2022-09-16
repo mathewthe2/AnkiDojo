@@ -1,4 +1,3 @@
-import os, re
 import requests
 
 from .util import AnkiHelper
@@ -123,21 +122,32 @@ def get_fields(model_name=None):
     field_names = ankiHelper.get_model_field_names(model_name)
     return jsonify(field_names)
 
-@bp.route("/api/notes")
-def search_notes():
-    keyword = request.args.get('keyword', type=str, default='')
-    deck_name = request.args.get('deck_name', type=str, default='')
-    shuffle = request.args.get('shuffle', type=bool, default=False)
-    extra_filter = request.args.get('extra_filter', type=str, default='')
-    offset = request.args.get('offset', type=int, default=0)
-    limit = request.args.get('limit', type=int, default=10)
-    notes = ankiHelper.search_notes(keyword, deck_name, extra_filter, shuffle, offset, limit)
-    return jsonify(notes)
+@bp.route("/api/notes", methods=('GET', 'POST'))
+def notes():
+    if request.method == 'GET': ## search notes
+        keyword = request.args.get('keyword', type=str, default='')
+        deck_name = request.args.get('deck_name', type=str, default='')
+        shuffle = request.args.get('shuffle', type=bool, default=False)
+        extra_filter = request.args.get('extra_filter', type=str, default='')
+        offset = request.args.get('offset', type=int, default=0)
+        limit = request.args.get('limit', type=int, default=10)
+        notes = ankiHelper.search_notes(keyword, deck_name, extra_filter, shuffle, offset, limit)
+        return jsonify(notes)
+    elif request.method == 'POST':
+        content = request.get_json()
+        result = []
+        if content and "notes" in content:
+            result = ankiHelper.add_notes(content["notes"])
+        return jsonify(result)
     
 @bp.route("/api/apps")
 def get_apps():
-    apps = userApps.get_apps()
-    return jsonify(apps)
+    is_community = request.args.get('community', type=bool, default=False)
+    if (is_community):
+        return jsonify({})
+    else:
+        apps = userApps.get_apps()
+        return jsonify(apps)
     
 @bp.route("/api/terms", methods=('GET', 'POST'))
 def terms():
