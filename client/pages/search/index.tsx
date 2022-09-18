@@ -45,7 +45,7 @@ function Search() {
   // };
 
   return (
-    <Container mt={50}>
+    <Container fluid mt={30}>
       <Tabs value={activeTab} onTabChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="anki" icon={<IconPhoto size={14} />}>

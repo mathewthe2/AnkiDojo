@@ -65,7 +65,7 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
       }
     });
     getTermDefinitions(expressionList).then((definitions) => {
-      if (expressionList.length === definitions.length) {
+      if (expressionList.length === definitions?.length) {
         setExpressionTerms(
           expressionList.map((expression, index) => {
             return {
@@ -170,7 +170,7 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
                   )}
                 </td>
                 <td style={{ margin: "0 auto" }}>
-                  {expressionTerm.definition.pitch_svg.length > 0 && (
+                  {expressionTerm?.definition?.pitch_svg?.length > 0 && (
                     <Menu shadow="md" width={200}>
                       <Menu.Target>
                         <UnstyledButton

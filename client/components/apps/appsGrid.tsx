@@ -5,16 +5,14 @@ import {
   Tabs,
   UnstyledButton,
   Card,
-  Paper,
-  Title,
   SimpleGrid,
-  Grid,
   createStyles,
 } from "@mantine/core";
 import { IconUser, IconPhoto, IconMessageCircle, IconSettings } from '@tabler/icons';
 import Link from "next/link";
 import { getUserApps, getAppIconUrl } from "@/lib/apps";
 import UserAppInterface from "@/interfaces/apps/UserAppInterface";
+import CommunityApps from "./communityApps";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -105,7 +103,7 @@ function AppsGrid() {
       </Tabs.Panel>
 
       <Tabs.Panel value="communityApps" pt="xs">
-        Community Apps
+        <CommunityApps />
       </Tabs.Panel>
     </Tabs>
       

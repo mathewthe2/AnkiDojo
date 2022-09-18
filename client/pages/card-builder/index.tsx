@@ -3,7 +3,7 @@ import CardBuilderForm from "@/components/card-builder/cardBuilderForm";
 
 function CardBuilder() {
   return (
-    <Container mt={30}>
+    <Container fluid  mt={30}>
         <CardBuilderForm/>
     </Container>
   );

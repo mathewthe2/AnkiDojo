@@ -3,6 +3,7 @@ import requests
 from .util import AnkiHelper
 from .user_apps import UserApps
 from .japanese import Japanese
+from .google_lens import get_google_lens_url
 
 from flask import (
     Blueprint, current_app, jsonify, redirect, request, send_from_directory
@@ -143,11 +144,8 @@ def notes():
 @bp.route("/api/apps")
 def get_apps():
     is_community = request.args.get('community', type=bool, default=False)
-    if (is_community):
-        return jsonify({})
-    else:
-        apps = userApps.get_apps()
-        return jsonify(apps)
+    apps = userApps.get_community_apps() if is_community else userApps.get_apps()
+    return jsonify(apps)
     
 @bp.route("/api/terms", methods=('GET', 'POST'))
 def terms():
@@ -161,6 +159,7 @@ def terms():
             result.append(exp)
     elif request.method == "POST":
         content = request.get_json()
+        has_one_definition = False
         if content and "keywords" in content:
             keywords = content["keywords"]
             include_pitch_graph = "include_pitch_graph" in content
@@ -173,6 +172,7 @@ def terms():
                         reading = definitions[0]['reading']
                         definitions[0]['pitch_svg'] = language.pitch.get_svg(expression, reading)
                     result.append(definitions[0])
+                    has_one_definition = True
                 else:
                     empty_definition = {
                         "expression": "",
@@ -183,4 +183,19 @@ def terms():
                         "rules": []
                     }
                     result.append(empty_definition)
+            if not has_one_definition:
+                result = []
     return jsonify(result)
+
+
+@bp.route("/api/google_lens_url", methods=('POST',))
+def google_lens_url():
+    if request.method == 'POST':
+        image_file = request.files.get('file')
+        url = get_google_lens_url(image_file)
+        return jsonify({'url': url})
+        # if 'data' in content:
+        #     # image = request.json['data']
+        #     image = content['data']
+        #     url = get_google_lens_url(image)
+        #     return jsonify({'url': url})

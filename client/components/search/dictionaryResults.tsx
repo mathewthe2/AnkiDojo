@@ -1,4 +1,4 @@
-import { Card, Stack, Text, Group, List } from "@mantine/core";
+import { Card, Stack, Text, Group, List, Select } from "@mantine/core";
 import { useQuery } from "react-query";
 import { ScrollArea } from "@mantine/core";
 import { getTermDefinitions } from "@/lib/japanese";
@@ -14,7 +14,7 @@ function DictionaryResults({ keyword }: { keyword: string }) {
 
   return (
     <ScrollArea mt={20}>
-      {definitions &&
+      {definitions && definitions.length > 0 &&
         definitions?.map((definition: Definition) => (
           <Card key={definition.expression}>
             <Group mb={20} spacing="xl">
@@ -25,13 +25,6 @@ function DictionaryResults({ keyword }: { keyword: string }) {
                     <rt>{definition.reading}</rt>
                   </ruby>
                 </Text>
-                {definition.pitch_svg && (
-                  <CardBuilderPitchSvg
-                    height={40}
-                    width={"auto"}
-                    pitch_string={definition.pitch_svg[0]}
-                  />
-                )}
               </Stack>
 
               {definition.glossary && (
@@ -42,6 +35,18 @@ function DictionaryResults({ keyword }: { keyword: string }) {
                 </List>
               )}
             </Group>
+            {definition.pitch_svg &&
+            <Group style={{float: 'left'}}>
+              {definition.pitch_svg.map((pitch_svg) => (
+                <CardBuilderPitchSvg
+                  height={40}
+                  key={pitch_svg}
+                  width={"auto"}
+                  pitch_string={pitch_svg}
+                />
+      
+              ))}
+              </Group>}
           </Card>
         ))}
     </ScrollArea>

@@ -3,7 +3,7 @@ import AnkiSettings from "@/components/settings/ankiSettings";
 
 function Settings() {
   return (
-    <Container>
+    <Container fluid>
       <AnkiSettings />
     </Container>
   );

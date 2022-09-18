@@ -1,8 +1,10 @@
 import os
 import json
+import requests
 
 # Paths
 user_apps_directory = os.path.join(os.path.dirname(__file__), 'data', 'user_apps')
+COMMUNITY_CATALOG_URL = 'https://raw.githubusercontent.com/mathewthe2/AnkiDojo-Apps/main/catalog.json'
 
 class UserApps():
     def __init__(self):
@@ -19,3 +21,10 @@ class UserApps():
                     app_meta["id"] = os.path.basename(app_path)
                     apps.append(app_meta)
         return apps
+
+    def get_community_apps(self):
+        r = requests.get(COMMUNITY_CATALOG_URL)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            return []
