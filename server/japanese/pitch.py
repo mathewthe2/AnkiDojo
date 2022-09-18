@@ -18,8 +18,9 @@ class Pitch():
     def get_svg(self, expression, reading=''):
         result = []
         pitch = self.get_pitch(expression, reading)
+        if not pitch:
+            return []
         pitch = re.sub(r"\((.*?)\)", "", pitch) # remove paranthesis content
-        print('p', pitch)
         pitches = []
         if ',' in pitch:
             pitches_by_word = pitch.split(',')
@@ -48,4 +49,5 @@ class Pitch():
 #     p = Pitch(directory)
 #     a = p.get_svg('お手前', 'おてまえ')
 #     b = p.get_svg('この方', 'このかた')
+#     c = p.get_svg('虹色', 'にじいろ')
 #     print(a)
