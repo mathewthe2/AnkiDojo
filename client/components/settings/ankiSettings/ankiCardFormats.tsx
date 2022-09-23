@@ -31,7 +31,7 @@ const useStyles = createStyles((theme) => ({
 }));
 function AnkiCardFormats() {
   const { classes, theme } = useStyles();
-  const {data:cardFormats, isLoading:isLoadingCardFormats} = useQuery(AnkiSettingType.CardFormat, getCardFormats)
+  const {data:cardFormats, isFetching} = useQuery(AnkiSettingType.CardFormat, getCardFormats)
   const [opened, setOpened] = useState(false);
   const [activeCardFormat, setActiveCardFormat] = useState<AnkiCardFormat>();
 

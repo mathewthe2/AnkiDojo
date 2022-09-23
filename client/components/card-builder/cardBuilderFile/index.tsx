@@ -1,86 +1,133 @@
 import { useEffect, useState } from "react";
-import { useMantineTheme, Button,Group, Modal, Text, Image, SimpleGrid, NavLink } from "@mantine/core";
+import {
+  useMantineTheme,
+  Group,
+  Modal,
+  Text,
+  NavLink,
+} from "@mantine/core";
 import {
   Dropzone,
   DropzoneProps,
-  IMAGE_MIME_TYPE,
+  MIME_TYPES,
   FileWithPath,
 } from "@mantine/dropzone";
-import { IconUpload, IconX, IconPhoto, IconFile } from "@tabler/icons";
-import { getGoogleLensUrl } from "@/lib/card-builder/photo";
+import CardBuilderPreview from "../cardBuilderPreview";
+import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
+import createExpressionList from "@/lib/card-builder/createExpressionList";
+import { IconUpload, IconX, IconFile } from "@tabler/icons";
 
 function CardBuilderFile(props: Partial<DropzoneProps>) {
   const theme = useMantineTheme();
   const [files, setFiles] = useState<FileWithPath[]>([]);
-  const [opened, setOpened] = useState(false);
+  const [dropModalOpened, setDropModalOpened] = useState(false);
+  const [expressionList, setExpressionList] = useState<ExpressionTerm[]>([]);
+  const [previewOpened, setPreviewOpened] = useState(false);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (files.length > 0) {
-      getGoogleLensUrl(files[0]).then(response=>{
-        if ('url' in response) {
-          setOpened(false);
-          window.open(response['url'], 'Google Lens', "height=640,width=960,toolbar=no,menubar=no,scrollbars=no,location=no,status=no")
-        }
-      })
+      console.log(files[0]);
+      handleFile(files[0]);
     }
-  }, [files])
+  }, [files]);
+
+  const handleFile = (file: FileWithPath) => {
+    switch (file.type) {
+      case "text/plain":
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const content = reader.result as string;
+          previewVocabulary(content!.split(/[\r\n]+/));
+        };
+        reader.readAsText(file);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const previewVocabulary = (vocabularyItems: string[]) => {
+    setExpressionList(createExpressionList(vocabularyItems));
+    setDropModalOpened(false);
+    setPreviewOpened(true);
+  };
 
   return (
     <div>
-        <NavLink onClick={() => setOpened(true)} icon={<IconFile size={16} stroke={1.5} />} label="File"></NavLink>
-        <Modal
+      <NavLink
+        onClick={() => setDropModalOpened(true)}
+        icon={<IconFile size={16} stroke={1.5} />}
+        label="File"
+      ></NavLink>
+      <Modal
         centered
         withCloseButton={false}
-        opened={opened}
+        opened={dropModalOpened}
         size="xl"
-        onClose={() => setOpened(false)}
+        onClose={() => setDropModalOpened(false)}
       >
-      <Dropzone
-        onDrop={setFiles}
-        onReject={(files) => console.log("rejected files", files)}
-        multiple={false}
-        maxSize={3 * 1024 ** 2}
-        accept={IMAGE_MIME_TYPE}
-        {...props}
-      >
-        <Group
-          position="center"
-          spacing="xl"
-          style={{ minHeight: 220, pointerEvents: "none" }}
+        <Dropzone
+          onDrop={setFiles}
+          onReject={(files) => console.log("rejected files", files)}
+          multiple={false}
+          accept={[
+            "text/plain"
+          ]}
+          // accept={[
+          //   MIME_TYPES.csv,
+          //   "text/tsv",
+          //   "text/plain",
+          //   "application/json",
+          // ]}
+          {...props}
         >
-          <Dropzone.Accept>
-            <IconUpload
-              size={50}
-              stroke={1.5}
-              color={
-                theme.colors[theme.primaryColor][
-                  theme.colorScheme === "dark" ? 4 : 6
-                ]
-              }
-            />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <IconX
-              size={50}
-              stroke={1.5}
-              color={theme.colors.red[theme.colorScheme === "dark" ? 4 : 6]}
-            />
-          </Dropzone.Reject>
-          <Dropzone.Idle>
-            <IconPhoto size={50} stroke={1.5} />
-          </Dropzone.Idle>
+          <Group
+            position="center"
+            spacing="xl"
+            style={{ minHeight: 220, pointerEvents: "none" }}
+          >
+            <Dropzone.Accept>
+              <IconUpload
+                size={50}
+                stroke={1.5}
+                color={
+                  theme.colors[theme.primaryColor][
+                    theme.colorScheme === "dark" ? 4 : 6
+                  ]
+                }
+              />
+            </Dropzone.Accept>
+            <Dropzone.Reject>
+              <IconX
+                size={50}
+                stroke={1.5}
+                color={theme.colors.red[theme.colorScheme === "dark" ? 4 : 6]}
+              />
+            </Dropzone.Reject>
+            <Dropzone.Idle>
+              <IconFile size={50} stroke={1.5} />
+            </Dropzone.Idle>
 
-          <div>
-            <Text size="xl" inline>
-              Drag image here or click to select file
-            </Text>
-            <Text size="sm" color="dimmed" inline mt={7}>
-              File should not exceed 5mb
-            </Text>
-          </div>
-        </Group>
-      </Dropzone>
-</Modal>
+            <div>
+              <Text size="xl" inline>
+                Drag file here or click to select file
+              </Text>
+              <Text size="sm" color="dimmed" inline mt={7}>
+                *txt
+              </Text>
+            </div>
+          </Group>
+        </Dropzone>
+      </Modal>
+      <Modal
+        centered
+        opened={previewOpened}
+        onClose={() => setPreviewOpened(false)}
+        withCloseButton={false}
+        size="70%"
+      >
+        <CardBuilderPreview expressionList={expressionList} />
+      </Modal>
     </div>
   );
 }

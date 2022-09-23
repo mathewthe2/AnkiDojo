@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Text,
   Image,
@@ -8,10 +7,10 @@ import {
   SimpleGrid,
   createStyles,
 } from "@mantine/core";
-import { IconUser, IconPhoto, IconMessageCircle, IconSettings } from '@tabler/icons';
+import { useQuery } from "react-query";
+import { IconUser, IconMessageCircle } from "@tabler/icons";
 import Link from "next/link";
 import { getUserApps, getAppIconUrl } from "@/lib/apps";
-import UserAppInterface from "@/interfaces/apps/UserAppInterface";
 import CommunityApps from "./communityApps";
 
 const useStyles = createStyles((theme) => ({
@@ -46,67 +45,70 @@ const useStyles = createStyles((theme) => ({
 
 function AppsGrid() {
   const { classes, theme } = useStyles();
-  const [userApps, setUserApps] = useState<UserAppInterface[]>([]);
-
-  useEffect(() => {
-    getUserApps().then((apps) => setUserApps(apps));
-  }, []);
+  const { data: userApps, isLoading } = useQuery("user-apps", getUserApps);
 
   return (
     <>
       {/* <Title order={3}>Apps</Title> */}
       <Tabs defaultValue="myApps">
-      <Tabs.List>
-        <Tabs.Tab value="myApps" icon={<IconUser size={14} />}>My Apps</Tabs.Tab>
-        <Tabs.Tab value="communityApps" icon={<IconMessageCircle size={14} />}>Community Apps</Tabs.Tab>
-      </Tabs.List>
-      <Tabs.Panel value="myApps" pt="xs">
-      <Card shadow="xs" p="md" className={classes.card}>
-        <SimpleGrid cols={3} mt="md">
-          {userApps.map((userApp) => (
-            <Link key={userApp.id} href={`/apps/${userApp.id}`} passHref>
-              <UnstyledButton>
-                <Card style={{ minHeight: 300 }} className={classes.item}>
-                  <Card.Section>
-                    <Image
-                      width={300}
-                      height={150}
-                      src={getAppIconUrl(userApp)}
-                      style={{
-                        marginLeft: "auto",
-                        marginRight: "auto",
-                      }}
-                    />
-                  </Card.Section>
-                  <Text
-                    weight={500}
-                    size="lg"
-                    mt="md"
-                    style={{ textAlign: "center" }}
-                  >
-                    {userApp.title}
-                  </Text>
-                  <Text
-                    mt="xs"
-                    color="dimmed"
-                    size="sm"
-                    style={{ textAlign: "center" }}
-                  >
-                    {userApp.description}
-                  </Text>
-                </Card>
-              </UnstyledButton>
-            </Link>
-          ))}
-        </SimpleGrid>
-      </Card>
-      </Tabs.Panel>
+        <Tabs.List>
+          <Tabs.Tab value="myApps" icon={<IconUser size={14} />}>
+            My Apps
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="communityApps"
+            icon={<IconMessageCircle size={14} />}
+          >
+            Community Apps
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="myApps" pt="xs">
+          <Card shadow="xs" p="md" className={classes.card}>
+            <SimpleGrid cols={5} mt="md">
+              {userApps &&
+                userApps.map((userApp) => (
+                  <Link key={userApp.id} href={`/apps/${userApp.id}`} passHref>
+                    <UnstyledButton>
+                      <Card style={{ minHeight: 200 }} className={classes.item}>
+                        <Card.Section>
+                          <Image
+                            width={150}
+                            height={100}
+                            src={getAppIconUrl(userApp)}
+                            style={{
+                              marginLeft: "auto",
+                              marginRight: "auto",
+                            }}
+                          />
+                        </Card.Section>
+                        <Text
+                          weight={500}
+                          size="lg"
+                          mt="md"
+                          style={{ textAlign: "center" }}
+                        >
+                          {userApp.title}
+                        </Text>
+                        <Text
+                          mt="xs"
+                          color="dimmed"
+                          size="sm"
+                          style={{ textAlign: "center" }}
+                        >
+                          {userApp.description}
+                        </Text>
+                      </Card>
+                    </UnstyledButton>
+                  </Link>
+                ))}
+            </SimpleGrid>
+          </Card>
+        </Tabs.Panel>
 
-      <Tabs.Panel value="communityApps" pt="xs">
-        <CommunityApps />
-      </Tabs.Panel>
-    </Tabs>
-      
+        <Tabs.Panel value="communityApps" pt="xs">
+          <CommunityApps />
+        </Tabs.Panel>
+      </Tabs>
     </>
   );
 }

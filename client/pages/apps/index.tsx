@@ -9,8 +9,8 @@ function Apps() {
 
   return (
     <Container fluid pt={20}>
-      <ActionsGrid />
-      <Divider mb={20} />
+      {/* <ActionsGrid />
+      <Divider mb={20} /> */}
       <AppsGrid/>
     </Container>
   );

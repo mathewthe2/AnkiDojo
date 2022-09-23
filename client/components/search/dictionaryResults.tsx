@@ -4,17 +4,25 @@ import { ScrollArea } from "@mantine/core";
 import { getTermDefinitions } from "@/lib/japanese";
 import { Definition } from "@/lib/japanese";
 import CardBuilderPitchSvg from "../card-builder/cardBuilderPitchSvg";
+import { toHiragana } from "wanakana";
 
 function DictionaryResults({ keyword }: { keyword: string }) {
   const { data: definitions, isFetching: isLoading } = useQuery(
     ["terms", keyword],
-    () => getTermDefinitions(keyword.split(" ")),
+    () => getTermDefinitions(getKeywords(keyword.split(" "))),
     { enabled: keyword.length > 0 }
   );
 
+  const getKeywords = (keywords: string[]) => {
+    return keywords.map((word) =>
+      word.match(/[a-z]/i) ? toHiragana(word) : word
+    );
+  };
+
   return (
     <ScrollArea mt={20}>
-      {definitions && definitions.length > 0 &&
+      {definitions &&
+        definitions.length > 0 &&
         definitions?.map((definition: Definition) => (
           <Card key={definition.expression}>
             <Group mb={20} spacing="xl">
@@ -35,18 +43,18 @@ function DictionaryResults({ keyword }: { keyword: string }) {
                 </List>
               )}
             </Group>
-            {definition.pitch_svg &&
-            <Group style={{float: 'left'}}>
-              {definition.pitch_svg.map((pitch_svg) => (
-                <CardBuilderPitchSvg
-                  height={40}
-                  key={pitch_svg}
-                  width={"auto"}
-                  pitch_string={pitch_svg}
-                />
-      
-              ))}
-              </Group>}
+            {definition.pitch_svg && (
+              <Group style={{ float: "left" }}>
+                {definition.pitch_svg.map((pitch_svg) => (
+                  <CardBuilderPitchSvg
+                    height={40}
+                    key={pitch_svg}
+                    width={"auto"}
+                    pitch_string={pitch_svg}
+                  />
+                ))}
+              </Group>
+            )}
           </Card>
         ))}
     </ScrollArea>

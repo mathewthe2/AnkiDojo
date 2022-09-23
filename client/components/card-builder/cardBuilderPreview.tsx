@@ -1,31 +1,33 @@
 import { useEffect, useState } from "react";
 import {
   Box,
+  Center,
+  Skeleton,
+  Title,
   Menu,
   Text,
   ScrollArea,
   Card,
   createStyles,
-  Center,
   Button,
   Select,
-  Paper,
   Table,
   ActionIcon,
   UnstyledButton,
+  Highlight,
 } from "@mantine/core";
-import CardBuilderPreviewProps from "@/interfaces/card_builder/CardBuilderPreviewProps";
 import { getTermDefinitions, Definition } from "@/lib/japanese";
-import { getDeckNames, getPrimaryDeck, getCardFormats, FieldValueType } from "@/lib/anki";
+import {
+  getDeckNames,
+  getPrimaryDeck,
+  getCardFormats,
+  FieldValueType,
+} from "@/lib/anki";
 import { NoteAddInterface, addNotesToAnki } from "@/lib/card-builder/notes";
 import { IconX } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
-
-interface ExpressionTerm {
-  userExpression: string;
-  definition: Definition;
-}
+import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -42,17 +44,23 @@ const useStyles = createStyles((theme) => ({
       background:
         theme.colorScheme === "dark"
           ? theme.colors.gray[6]
-          : theme.colors.dark[6],
+          : theme.colors.dark[1],
     },
   },
 }));
 
-function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
+function CardBuilderPreview({
+  expressionList,
+}: {
+  expressionList: ExpressionTerm[];
+}) {
   const [deckNames, setDeckNames] = useState([]);
-  const [selectedDeckName, setSelectedDeckName] = useState('');
+  const [selectedDeckName, setSelectedDeckName] = useState("");
   const [cardFormatModelName, setCardFormatModelName] = useState("");
   const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
   const [expressionTerms, setExpressionTerms] = useState<ExpressionTerm[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasSentences, setHasSentences] = useState(false);
   const { classes, theme } = useStyles();
 
   useEffect(() => {
@@ -64,63 +72,146 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
         setCardFormatModelName(cardFormats[0].modelName);
       }
     });
-    getTermDefinitions(expressionList).then((definitions) => {
+    // combine existing definition (including sentence) with anki definition
+    getTermDefinitions(
+      expressionList.map(
+        (expression: ExpressionTerm) => expression.userExpression
+      )
+    ).then((definitions) => {
       if (expressionList.length === definitions?.length) {
         setExpressionTerms(
-          expressionList.map((expression, index) => {
+          expressionList.map((expression: ExpressionTerm, index: number) => {
+            if (
+              typeof expression.definition != "undefined" &&
+              expression.definition
+            ) {
+              setHasSentences(true);
+            }
             return {
-              userExpression: expression,
-              definition: definitions[index],
+              userExpression: expression.userExpression,
+              definition: { ...expression.definition, ...definitions[index] },
             };
           })
         );
       }
+      setIsLoaded(true);
     });
   }, []);
 
-  const updateTextOfTermDefinitions = (index: number, newValue: string) => {
-    // expressionTerms[index]
+  const removeTerm = (index: number) => {
+    const terms = [...expressionTerms];
+    terms.splice(index, 1);
+    setExpressionTerms(terms);
+  };
+
+  const addGlossaryTerm = (index: number, value: string) => {
+    const terms = [...expressionTerms];
+    if (
+      typeof terms[index].definition != "undefined" &&
+      terms[index].definition
+    ) {
+      terms[index].definition!.glossary = [
+        ...(terms[index].definition!.glossary as string[]),
+        value,
+      ];
+      terms[index].definition!.selectedGlossary = value;
+    }
+    console.log(terms[index]);
+    setExpressionTerms(terms);
+  };
+
+  const updateTextOfTermDefinitions = (
+    index: number,
+    key: string,
+    value: string
+  ) => {
+    setExpressionTerms(
+      [...expressionTerms].map((term, termIndex) => {
+        if (termIndex === index) {
+          switch (key) {
+            case FieldValueType.Expression:
+              return { ...term, expression: value };
+            case FieldValueType.Reading:
+              return { ...term, reading: value };
+            case FieldValueType.Glossary:
+              return {
+                ...term,
+                definition: { ...term.definition, selectedGlossary: value },
+              };
+          }
+        } else {
+          return term;
+        }
+      }) as ExpressionTerm[]
+    );
   };
 
   const bulkAddToAnki = () => {
-    const modelMap = cardFormats.find(cardFormat=>cardFormat.modelName === cardFormatModelName)?.modelMap;
+    const modelMap = cardFormats.find(
+      (cardFormat) => cardFormat.modelName === cardFormatModelName
+    )?.modelMap;
     // map fields to corresponding names in card format
-    const fieldMaps:Map<string, string>[] = [];
-    expressionTerms.forEach(expressionTerm=>{
-      const fieldMap = new Map<string, string>;
+    const fieldMaps: Map<string, string>[] = [];
+    expressionTerms.forEach((expressionTerm) => {
+      const fieldMap = new Map<string, string>();
       modelMap?.forEach((value: string, key: string) => {
-        switch(value) {
+        switch (value) {
           case FieldValueType.Expression:
-            fieldMap.set(key, expressionTerm.definition.expression);
+            fieldMap.set(key, expressionTerm.definition?.expression || "");
             break;
           case FieldValueType.Reading:
-            fieldMap.set(key, expressionTerm.definition.reading);
+            fieldMap.set(key, expressionTerm.definition?.reading || "");
             break;
           case FieldValueType.Glossary:
-            fieldMap.set(key, expressionTerm.definition.glossary[0]); // TODO: change selected glossary
+            console.log(
+              "selected?",
+              expressionTerm.definition?.selectedGlossary
+            );
+            fieldMap.set(
+              key,
+              expressionTerm.definition?.selectedGlossary ||
+                expressionTerm.definition?.glossary?.[0] ||
+                ""
+            );
             break;
           case FieldValueType.PitchAccent:
-            fieldMap.set(key, expressionTerm.definition.pitch_svg[0]); // TODO: change selected pitch
+            fieldMap.set(key, expressionTerm.definition?.pitch_svg?.[0] || ""); // TODO: change selected pitch
+            break;
+          case FieldValueType.Sentence:
+            fieldMap.set(key, expressionTerm.definition?.sentence || ""); // TODO: change selected pitch
             break;
           default:
             break;
-        };
+        }
       });
       fieldMaps.push(fieldMap);
-    })
-    const notesToAdd:NoteAddInterface[] = fieldMaps.map(fieldMap=>{
+    });
+    const notesToAdd: NoteAddInterface[] = fieldMaps.map((fieldMap) => {
       return {
         deckName: selectedDeckName,
         modelName: cardFormatModelName,
         fields: fieldMap,
-        tags: []
-      }
-    })
+        tags: [],
+      };
+    });
     addNotesToAnki(notesToAdd);
+  };
+
+  if (!isLoaded) {
+    return <Skeleton height={400} />
+  } else if (expressionTerms.length === 0) {
+    return (
+      <Center>No words added!</Center>
+    )
   }
+  console.log(expressionTerms)
 
   return (
     <>
+      <Title color="dimmed" order={5} style={{ textAlign: "center" }}>
+        {expressionTerms.length}{" "}
+        {expressionTerms.length === 1 ? "Word" : "Words"}
+      </Title>
       <ScrollArea.Autosize maxHeight={500} style={{ width: "100%" }} mx="auto">
         <Table striped mb={10} ml={5}>
           <thead>
@@ -129,6 +220,9 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
               <th style={{ textAlign: "center" }}>Reading</th>
               <th style={{ textAlign: "center" }}>Glossary</th>
               <th style={{ textAlign: "center" }}>Pitch</th>
+              {hasSentences && (
+                <th style={{ textAlign: "center" }}>Sentence</th>
+              )}
               <th></th>
             </tr>
           </thead>
@@ -138,72 +232,129 @@ function CardBuilderPreview({ expressionList }: CardBuilderPreviewProps) {
                 <td
                   suppressContentEditableWarning
                   contentEditable
-                  onInput={(e) => console.log(e.currentTarget.textContent)}
-                  style={{ textAlign: "center", fontSize: "24px" }}
+                  onInput={(e) =>
+                    updateTextOfTermDefinitions(
+                      index,
+                      FieldValueType.Expression,
+                      e.currentTarget.textContent || ""
+                    )
+                  }
+                  style={{
+                    textAlign: "center",
+                    fontSize: "24px",
+                    minWidth: 100,
+                  }}
                 >
-                  {expressionTerm.definition.expression}
+                  {expressionTerm.definition?.expression}
                 </td>
                 <td
                   suppressContentEditableWarning
                   contentEditable
-                  style={{ textAlign: "center", fontSize: "24px" }}
+                  onInput={(e) =>
+                    updateTextOfTermDefinitions(
+                      index,
+                      FieldValueType.Reading,
+                      e.currentTarget.textContent || ""
+                    )
+                  }
+                  style={{
+                    textAlign: "center",
+                    fontSize: "18px",
+                    minWidth: 100,
+                  }}
                 >
-                  {expressionTerm.definition.reading}
+                  {expressionTerm.definition?.reading}
                 </td>
                 <td
                   suppressContentEditableWarning
-                  style={{ textAlign: "center" }}
+                  style={{ textAlign: "left", minWidth: 100 }}
                   contentEditable={
-                    expressionTerm.definition.glossary.length == 1
+                    expressionTerm.definition?.glossary?.length == 1
+                  }
+                  onInput={(e) =>
+                    updateTextOfTermDefinitions(
+                      index,
+                      FieldValueType.Glossary,
+                      e.currentTarget.textContent || ""
+                    )
                   }
                 >
-                  {expressionTerm.definition.glossary.length === 1 &&
-                    expressionTerm.definition.glossary[0]}
-                  {expressionTerm.definition.glossary.length > 1 && (
-                    <Select
-                      searchable
-                      creatable
-                      getCreateLabel={(query) => `+ Use glossary: ${query}`}
-                      defaultValue={expressionTerm.definition.glossary[0]}
-                      data={expressionTerm.definition.glossary}
-                    ></Select>
-                  )}
+                  {expressionTerm.definition?.glossary &&
+                    expressionTerm.definition.glossary.length === 1 &&
+                    expressionTerm.definition?.glossary?.[0]}
+                  {expressionTerm.definition?.glossary &&
+                    expressionTerm.definition.glossary.length > 1 && (
+                      <Select
+                        searchable
+                        creatable
+                        getCreateLabel={(query) => `+ Use glossary: ${query}`}
+                        onCreate={(query) => {
+                          // this will override onchange
+                          addGlossaryTerm(index, query);
+                          return query;
+                        }}
+                        defaultValue={expressionTerm.definition?.glossary?.[0]}
+                        data={expressionTerm.definition?.glossary || []}
+                        onChange={(newValue) =>
+                          updateTextOfTermDefinitions(
+                            index,
+                            FieldValueType.Glossary,
+                            newValue || ""
+                          )
+                        }
+                      ></Select>
+                    )}
                 </td>
                 <td style={{ margin: "0 auto" }}>
-                  {expressionTerm?.definition?.pitch_svg?.length > 0 && (
-                    <Menu shadow="md" width={200}>
-                      <Menu.Target>
-                        <UnstyledButton
-                          className={classes.pitchButton}
-                          >
-                          <CardBuilderPitchSvg
-                            height={50}
-                            width={"auto"}
-                            pitch_string={
-                              expressionTerm.definition.pitch_svg[0]
-                            }
-                          />
-                        </UnstyledButton>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Label>Pitch Accents</Menu.Label>
-                        {expressionTerm.definition.pitch_svg.map(
-                          (svg, index) => (
-                            <Menu.Item key={`svg_${index}`}>
-                              <CardBuilderPitchSvg
-                                height={50}
-                                width={"auto"}
-                                pitch_string={svg}
-                              />
-                            </Menu.Item>
-                          )
-                        )}
-                      </Menu.Dropdown>
-                    </Menu>
-                  )}
+                  {expressionTerm.definition?.pitch_svg &&
+                    expressionTerm.definition.pitch_svg.length > 0 && (
+                      <Menu shadow="md" width={200}>
+                        <Menu.Target>
+                          <UnstyledButton className={classes.pitchButton}>
+                            <CardBuilderPitchSvg
+                              height={50}
+                              width={"auto"}
+                              pitch_string={
+                                expressionTerm.definition?.pitch_svg?.[0] || ""
+                              }
+                            />
+                          </UnstyledButton>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Label>Pitch Accents</Menu.Label>
+                          {expressionTerm.definition?.pitch_svg?.map(
+                            (svg, index) => (
+                              <Menu.Item key={`svg_${index}`}>
+                                <CardBuilderPitchSvg
+                                  height={50}
+                                  width={"auto"}
+                                  pitch_string={svg}
+                                />
+                              </Menu.Item>
+                            )
+                          )}
+                        </Menu.Dropdown>
+                      </Menu>
+                    )}
                 </td>
+                {expressionTerm.definition?.sentence && (
+                  <td
+                    suppressContentEditableWarning
+                    style={{ textAlign: "left" }}
+                  >
+                    <Highlight
+                      highlightColor="pink"
+                      highlight={expressionTerm.userExpression}
+                    >
+                      {expressionTerm.definition.sentence}
+                    </Highlight>
+                  </td>
+                )}
                 <td>
-                  <ActionIcon variant="subtle">
+                  <ActionIcon
+                    variant="subtle"
+                    onClick={() => removeTerm(index)}
+                  >
                     <IconX size="14" />
                   </ActionIcon>
                 </td>
