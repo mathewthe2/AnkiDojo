@@ -2,7 +2,6 @@
 client/.next/
 client/node_modules/*
 server/app/*
-resources/*
 
 # python
 *.pycache

@@ -1,34 +1,5 @@
 {
-    "model_maps": {
-        "Japanese Anime": {
-            "Picture": "Picture",
-            "Sentence": "Sentence",
-            "Meaning": "Glossary",
-            "Audio": "Audio",
-            "Word": "Expression",
-            "Kana": "Reading",
-            "Pitch": "Pitch Accent",
-            "Sentence Audio": "Sentence Audio",
-            "Sentence Translation": "Sentence Translation"
-        },
-        "Immersion Kit Vocabulary-5ae55": {
-            "Vocabulary-Kanji": "Expression",
-            "Vocabulary-English": "Glossary",
-            "Vocabulary-Audio": "Audio",
-            "Vocabulary-Reading": "Reading",
-            "Expression": "Sentence",
-            "Sentence-English": "Sentence Translation",
-            "Screenshot": "Picture",
-            "Sentence-Audio": "Sentence Audio"
-        },
-        "Immersion Kit Sentence": {
-            "Screenshot": "Picture",
-            "Audio Sentence": "Sentence Audio",
-            "English": "Sentence Translation",
-            "Reading": "Sentence",
-            "Expression": "Sentence"
-        }
-    },
-    "primary_deck": "Japanese",
+    "model_maps": {},
+    "primary_deck": "",
     "enable_suspended": true
 }

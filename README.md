@@ -26,3 +26,9 @@ cd client
 yarn build
 next export -o ../server/app
 ```
+
+### Distribute for Anki
+
+```bash
+sh build.sh
+```
