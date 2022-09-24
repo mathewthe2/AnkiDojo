@@ -5,6 +5,7 @@ import {
   Group,
   Text,
   Image,
+  Stack,
 } from "@mantine/core";
 import AnkiNote from "@/interfaces/anki/ankiNote";
 import { parseExactSentenceWithFurigana } from "@/lib/search/parser";
@@ -23,7 +24,7 @@ const useStyles = createStyles((theme) => ({
   button: {
     // display: 'block',
     // overflowWrap: 'normal',
-    cursor: 'pointer',
+    cursor: "pointer",
     "&:hover": {
       textDecoration: "underline",
     },
@@ -39,6 +40,11 @@ function SearchResults({
 }) {
   const { classes, theme } = useStyles();
   const { playAudio } = useAudioPlayer({ playbackSpeed: 1.0 });
+
+  const parseTranslation = (translation: string) => {
+    return translation.replace(/&nbsp;/g, " ");
+  };
+
   return (
     <ScrollArea mt={20}>
       {notes.map((note: AnkiNote) => {
@@ -57,7 +63,12 @@ function SearchResults({
                 />
               )}
               {hasSentenceAudio ? (
-                  <Text size="xl" className={classes.button}  onClick={() => playAudio(sentenceAudio)}>
+                <Stack>
+                  <Text
+                    size="xl"
+                    className={classes.button}
+                    onClick={() => playAudio(sentenceAudio)}
+                  >
                     {parseExactSentenceWithFurigana({
                       exampleId: note?.noteId,
                       sentence: note?.fields.get(FieldValueType.Sentence),
@@ -67,17 +78,29 @@ function SearchResults({
                       keyword: keyword,
                     })}
                   </Text>
+                  {note?.fields.get(FieldValueType.SentenceTranslation) && (
+                    <Text>
+                      {parseTranslation(
+                        note?.fields.get(FieldValueType.SentenceTranslation) ||
+                          ""
+                      )}
+                    </Text>
+                  )}
+                </Stack>
               ) : (
-                <Text size="xl">
-                  {parseExactSentenceWithFurigana({
-                    exampleId: note?.noteId,
-                    sentence: note?.fields.get(FieldValueType.Sentence),
-                    sentenceWithFurigana: note?.fields.get(
-                      FieldValueType.Sentence
-                    ),
-                    keyword: keyword,
-                  })}
-                </Text>
+                <Stack>
+                  <Text>hello</Text>
+                  <Text size="xl">
+                    {parseExactSentenceWithFurigana({
+                      exampleId: note?.noteId,
+                      sentence: note?.fields.get(FieldValueType.Sentence),
+                      sentenceWithFurigana: note?.fields.get(
+                        FieldValueType.Sentence
+                      ),
+                      keyword: keyword,
+                    })}
+                  </Text>
+                </Stack>
               )}
             </Group>
           </Card>

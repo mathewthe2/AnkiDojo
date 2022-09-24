@@ -16,18 +16,20 @@ import {
   UnstyledButton,
   Highlight,
 } from "@mantine/core";
-import { getTermDefinitions, Definition } from "@/lib/japanese";
+import { getTermDefinitions } from "@/lib/japanese";
 import {
   getDeckNames,
   getPrimaryDeck,
   getCardFormats,
   FieldValueType,
 } from "@/lib/anki";
-import { NoteAddInterface, addNotesToAnki } from "@/lib/card-builder/notes";
+import { addNotesToAnki } from "@/lib/card-builder/notes";
+import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
 import { IconX } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
+import { NoteMedia } from "@/interfaces/card_builder/NoteMedia";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -146,13 +148,25 @@ function CardBuilderPreview({
     );
   };
 
+  const getWordAudio = (audioField:string, expressionTerm:ExpressionTerm) => {
+    const kanji = expressionTerm.definition?.expression || "";
+    const kana = expressionTerm.definition?.reading || "";
+    const audio:NoteMedia = {
+      url: `https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=${kanji}&kana=${kana}`,
+      filename: `AnkiDojo_${kanji}_${kana}.mp3`,
+      fields: audioField.length > 0 ? [audioField] : []
+    };
+    return audio
+  }
+
   const bulkAddToAnki = () => {
     const modelMap = cardFormats.find(
       (cardFormat) => cardFormat.modelName === cardFormatModelName
     )?.modelMap;
     // map fields to corresponding names in card format
     const fieldMaps: Map<string, string>[] = [];
-    expressionTerms.forEach((expressionTerm) => {
+    const audioList:NoteMedia[] = [];
+    expressionTerms.forEach((expressionTerm, index) => {
       const fieldMap = new Map<string, string>();
       modelMap?.forEach((value: string, key: string) => {
         switch (value) {
@@ -180,17 +194,22 @@ function CardBuilderPreview({
           case FieldValueType.Sentence:
             fieldMap.set(key, expressionTerm.definition?.sentence || ""); // TODO: change selected pitch
             break;
+          case FieldValueType.Audio:
+            audioList[index] = getWordAudio(key, expressionTerm);
+            break;
           default:
             break;
         }
       });
       fieldMaps.push(fieldMap);
     });
-    const notesToAdd: NoteAddInterface[] = fieldMaps.map((fieldMap) => {
+  
+    const notesToAdd: NoteAddInterface[] = fieldMaps.map((fieldMap, index) => {
       return {
         deckName: selectedDeckName,
         modelName: cardFormatModelName,
         fields: fieldMap,
+        audio: [audioList[index]],
         tags: [],
       };
     });

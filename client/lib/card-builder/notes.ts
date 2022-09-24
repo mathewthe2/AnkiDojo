@@ -1,9 +1,4 @@
-export interface NoteAddInterface {
-    deckName: string,
-    modelName: string,
-    fields: Map<string, string>,
-    tags: string[]
-}
+import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
 
 const ADD_NOTE_OPTIONS = {
   'allowDuplicate': true

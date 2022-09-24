@@ -1,5 +1,8 @@
 import aqt
 import anki
+import enum
+import base64
+import hashlib
 
 # https://github.com/FooSoft/anki-connect/blob/master/plugin/__init__.py
 class AnkiConnect():
@@ -21,16 +24,22 @@ class AnkiConnect():
 
         return ankiNote.id
 
+    def media(self):
+        media = self.collection().media
+        if media is None:
+            raise Exception('media is not available')
+
+        return media
+
     def addMediaFromNote(self, ankiNote, note):
-        pass
-        # audioObjectOrList = note.get('audio')
-        # self.addMedia(ankiNote, audioObjectOrList, util.MediaType.Audio)
+        audioObjectOrList = note.get('audio')
+        self.addMedia(ankiNote, audioObjectOrList, MediaType.Audio)
 
-        # videoObjectOrList = note.get('video')
-        # self.addMedia(ankiNote, videoObjectOrList, util.MediaType.Video)
+        videoObjectOrList = note.get('video')
+        self.addMedia(ankiNote, videoObjectOrList, MediaType.Video)
 
-        # pictureObjectOrList = note.get('picture')
-        # self.addMedia(ankiNote, pictureObjectOrList, util.MediaType.Picture)
+        pictureObjectOrList = note.get('picture')
+        self.addMedia(ankiNote, pictureObjectOrList, MediaType.Picture)
 
     def startEditing(self):
         self.window().requireReset()
@@ -182,4 +191,96 @@ class AnkiConnect():
         # Not a duplicate
         return 0
 
-    
+    def addMedia(self, ankiNote, mediaObjectOrList, mediaType):
+        if mediaObjectOrList is None:
+            return
+
+        if isinstance(mediaObjectOrList, list):
+            mediaList = mediaObjectOrList
+        else:
+            mediaList = [mediaObjectOrList]
+
+        for media in mediaList:
+            if media is not None and len(media['fields']) > 0:
+                try:
+                    mediaFilename = self.storeMediaFile(media['filename'],
+                                                        data=media.get('data'),
+                                                        path=media.get('path'),
+                                                        url=media.get('url'),
+                                                        skipHash=media.get('skipHash'),
+                                                        deleteExisting=media.get('deleteExisting'))
+
+                    if mediaFilename is not None:
+                        for field in media['fields']:
+                            if field in ankiNote:
+                                if mediaType is MediaType.Picture:
+                                    ankiNote[field] += u'<img src="{}">'.format(mediaFilename)
+                                elif mediaType is MediaType.Audio or mediaType is MediaType.Video:
+                                    ankiNote[field] += u'[sound:{}]'.format(mediaFilename)
+
+                except Exception as e:
+                    errorMessage = str(e).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                    for field in media['fields']:
+                        if field in ankiNote:
+                            ankiNote[field] += errorMessage
+
+    def storeMediaFile(self, filename, data=None, path=None, url=None, skipHash=None, deleteExisting=True):
+        if not (data or path or url):
+            raise Exception('You must provide a "data", "path", or "url" field.')
+        if data:
+            mediaData = base64.b64decode(data)
+        elif path:
+            with open(path, 'rb') as f:
+                mediaData = f.read()
+        elif url:
+            mediaData = download(url)
+
+        if skipHash is None:
+            skip = False
+        else:
+            m = hashlib.md5()
+            m.update(mediaData)
+            skip = skipHash == m.hexdigest()
+
+        if skip:
+            return None
+        if deleteExisting:
+            self.deleteMediaFile(filename)
+        return self.media().writeData(filename, mediaData)
+
+# https://github.com/FooSoft/anki-connect/blob/master/plugin/util.py
+
+class MediaType(enum.Enum):
+    Audio = 1
+    Video = 2
+    Picture = 3
+
+DEFAULT_CONFIG = {
+    'apiKey': None,
+    'apiLogPath': None,
+    'apiPollInterval': 25,
+    'apiVersion': 6,
+    'webBacklog': 5,
+    'webBindAddress': '127.0.0.1',
+    'webBindPort': 5008, # use anki dojo port instead of ankiconnet's port
+    'webCorsOrigin': None,
+    'webCorsOriginList': ['http://localhost'],
+    'ignoreOriginList': [],
+    'webTimeout': 10000,
+}
+
+def setting(key):
+    try:
+        return aqt.mw.addonManager.getConfig(__name__).get(key, DEFAULT_CONFIG[key])
+    except:
+        raise Exception('setting {} not found'.format(key))
+
+def download(url):
+    client = anki.sync.AnkiRequestsClient()
+    client.timeout = setting('webTimeout') / 1000
+
+    resp = client.get(url)
+    if resp.status_code != 200:
+        raise Exception('{} download failed with return code {}'.format(url, resp.status_code))
+
+    return client.streamContent(resp)

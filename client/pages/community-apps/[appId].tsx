@@ -1,8 +1,17 @@
 import { useRouter } from "next/router";
+import { getCommunityApps } from "@/lib/apps";
+import { useQuery } from "react-query";
 
 function CommunityApp() {
     const router = useRouter();
     const { appId } = router.query;
+
+    const { data: communityApps, isLoading } = useQuery(
+      "community-apps",
+      getCommunityApps
+    );
+    
+    const appUrl = communityApps?.find(communityApp=>communityApp.id===appId)?.url;
 
     return (
       <iframe
@@ -14,7 +23,7 @@ function CommunityApp() {
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       //   src="http://localhost:5008/apps/conjugation_drill/drill.html"
-       src={`https://mathewthe2.github.io/AnkiDojo-Apps/apps/${appId}/index.html`}
+       src={appUrl}
       ></iframe>
     );
   }

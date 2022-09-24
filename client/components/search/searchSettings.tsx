@@ -10,6 +10,7 @@ function SearchSettings() {
   return (
     <>
       <Select
+        clearable
         label="Filter by Deck"
         placeholder="All decks"
         data={deckNames.map((deckName) => {
