@@ -8,7 +8,7 @@ class Pitch():
 
     def get_pitch(self, expression, reading=''):
         cursor = self.db.cursor()
-        if reading:
+        if not reading:
             cursor.execute("SELECT pitch FROM Dict WHERE expression=?", (expression,))
         else:
             cursor.execute("SELECT pitch FROM Dict WHERE expression=? AND reading=?", (expression, reading))
