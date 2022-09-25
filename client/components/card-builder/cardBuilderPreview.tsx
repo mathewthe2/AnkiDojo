@@ -86,7 +86,7 @@ function CardBuilderPreview({
         (expression: ExpressionTerm) => expression.userExpression
       )
     ).then((definitions) => {
-      if (expressionList.length === definitions?.length) {
+      if (!isLoaded && expressionList.length === definitions?.length) {
         setExpressionTerms(
           expressionList.map((expression: ExpressionTerm, index: number) => {
             if (
@@ -300,6 +300,7 @@ function CardBuilderPreview({
                       {expressionTerm.definition?.audio_urls?.map(
                         (audioUrl: AudioUrl, audioIndex: number) => (
                           <NavLink
+                            key={`audiolink_${audioIndex}`}
                             onClick={() => {
                               playWordAudio(audioUrl.url);
                               updateTextOfTermDefinitions(
@@ -456,7 +457,7 @@ function CardBuilderPreview({
                     </Highlight>
                   </td>
                 )}
-                <td>
+                <td style={{paddingRight: 30}}>
                   <ActionIcon
                     variant="subtle"
                     onClick={() => removeTerm(index)}
