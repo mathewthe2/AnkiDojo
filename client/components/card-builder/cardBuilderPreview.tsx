@@ -415,6 +415,15 @@ function CardBuilderPreview({
                 <td style={{ margin: "0 auto" }}>
                   {expressionTerm.definition?.pitch_svg &&
                     expressionTerm.definition.pitch_svg.length > 0 && (
+                      expressionTerm.definition.pitch_svg.length === 1 ?
+                      <CardBuilderPitchSvg
+                      height={50}
+                      width={"auto"}
+                      pitch_string={
+                        expressionTerm.definition?.pitch_svg?.[0] || ""
+                      }
+                    />
+                    :
                       <Menu shadow="md" width={200} withinPortal>
                         <Menu.Target>
                           <UnstyledButton className={classes.pitchButton}>

@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import {
   Button,
   Modal,
-  Tabs,
+  Group,
   Title,
   Textarea,
   Grid,
+  ActionIcon,
 } from "@mantine/core";
 import CardBuilderPhoto from "./cardBuilderPhoto";
 import CardBuilderFile from "./cardBuilderFile";
@@ -13,14 +14,32 @@ import CardBuilderPreview from "./cardBuilderPreview";
 import CardBuilderKindle from "./cardBuilderKindle";
 const mockData = "言葉 \n適当\n行く\n浴びる\nあっち\n来ない";
 import createExpressionList from "@/lib/card-builder/createExpressionList";
+import { IconSettings } from "@tabler/icons";
+import { toHiragana } from "wanakana";
 
 function CardBuilderForm() {
   const [opened, setOpened] = useState(false);
   const [vocabularyText, setVocabularyText] = useState("");
 
+  const createWordList = (keywords: string[]) => {
+    const words = keywords.map((word) =>
+      word.match(/[a-z]/i) ? toHiragana(word) : word
+    );
+    return createExpressionList(words);
+  };
+
   return (
     <>
       <Grid>
+        <Grid.Col span={10}>
+          <Group position="apart">
+            <Title mb={20}>Card Builder</Title>
+            <ActionIcon color="dark">
+              <IconSettings />
+            </ActionIcon>
+          </Group>
+        </Grid.Col>
+        <Grid.Col span={2}></Grid.Col>
         <Grid.Col span={10}>
           <Textarea
             // mt={10}
@@ -38,7 +57,7 @@ function CardBuilderForm() {
             size="70%"
           >
             <CardBuilderPreview
-              expressionList={createExpressionList(vocabularyText.split(/[\r\n]+/))}
+              expressionList={createWordList(vocabularyText.split(/[\r\n]+/))}
             />
           </Modal>
           <Button
@@ -52,7 +71,7 @@ function CardBuilderForm() {
         <Grid.Col span={2}>
           <CardBuilderPhoto />
           <CardBuilderFile />
-          <CardBuilderKindle/>
+          <CardBuilderKindle />
         </Grid.Col>
       </Grid>
       {/* </Tabs.Panel> */}
