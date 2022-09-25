@@ -193,14 +193,19 @@ def terms():
             if include_pitch_graph:
                 with ThreadPoolExecutor(max_workers=5) as executor:
                     future_to_pitch_graph= {executor.submit(language.pitch.get_svg, word['expression'], word['reading']): word for word in result}
-                    for index, future in enumerate(as_completed(future_to_pitch_graph)):
+                    for future in as_completed(future_to_pitch_graph):
                         pitch_graph = future_to_pitch_graph[future]
                         try:
                             pitch_graph_result = future.result()
                         except Exception as exc:
                             print('%r generated an exception: %s' % (pitch_graph, exc))
                         else:
-                            result[index]['pitch_svg'] = pitch_graph_result
+                            for i in range(0, len(result)):
+                                if 'pitch_svg' in result[i]:
+                                    continue
+                                if result[i]['expression'] == pitch_graph['expression'] and result[i]['reading'] == pitch_graph['reading']:
+                                    result[i]['pitch_svg'] = pitch_graph_result
+                                    break
 
             include_audio_urls = bool_param(content, "include_audio_urls")
             if include_audio_urls:
@@ -212,14 +217,19 @@ def terms():
                 else:
                     with ThreadPoolExecutor(max_workers=5) as executor:
                         future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
-                        for index, future in enumerate(as_completed(future_to_audio)):
+                        for future in as_completed(future_to_audio):
                             audio_source = future_to_audio[future]
                             try:
                                 audio_result = future.result()
                             except Exception as exc:
                                 print('%r generated an exception: %s' % (audio_source, exc))
                             else:
-                                result[index]['audio_urls'] = audio_result
+                                for i in range(0, len(result)):
+                                    if 'audio_urls' in result[i]:
+                                        continue
+                                    if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
+                                        result[i]['audio_urls'] = audio_result
+                                        break
                     
     return jsonify(result)
 

@@ -279,7 +279,7 @@ function CardBuilderPreview({
                 <td style={{ maxWidth: 20 }}>
                   <Menu
                     trigger="hover"
-                    openDelay={100}
+                    openDelay={400}
                     closeDelay={400}
                     withinPortal
                   >

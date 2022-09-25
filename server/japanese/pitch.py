@@ -39,7 +39,8 @@ class Pitch():
                 for c in [*raw_pitch]:
                     parsed_pitches.add(int(c))
 
-        print(parsed_pitches)
+        if not reading: # hiragana or katakana
+            reading = expression
         for pitch_value in parsed_pitches:
             svg = pitch_svg(reading, pitch_value_to_patt(reading, pitch_value))
             result.append(svg)
@@ -57,13 +58,17 @@ if __name__ == '__main__':
             'expression': 'お手前',
             'reading': 'おてまえ',
         },
-         {
+        {
             'expression': 'この方',
             'reading': 'このかた',
         },
-          {
+        {
             'expression': '虹色',
             'reading': 'にじいろ',
+        },
+         {
+            'expression': 'トイレ',
+            'reading': '',
         }
     ]
 
@@ -76,4 +81,10 @@ if __name__ == '__main__':
             except Exception as exc:
                 print('%r generated an exception: %s' % (pitch_graph, exc))
             else:
-                print(pitch_graph_result)
+                for i in range(0, len(data)):
+                    if 'pitch_svg' in data[i]:
+                        continue
+                    if data[i]['expression'] == pitch_graph['expression'] and data[i]['reading'] == pitch_graph['reading']:
+                        data[i]['pitch_svg'] = len(pitch_graph_result[0]) if pitch_graph_result else None
+                        break
+                print(data)
