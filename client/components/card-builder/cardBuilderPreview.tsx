@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  Box,
   Center,
   Skeleton,
   Title,
   Menu,
   Text,
+  NavLink,
   ScrollArea,
   Card,
   createStyles,
@@ -15,6 +15,7 @@ import {
   ActionIcon,
   UnstyledButton,
   Highlight,
+  Loader,
 } from "@mantine/core";
 import { getTermDefinitions } from "@/lib/japanese";
 import {
@@ -23,13 +24,15 @@ import {
   getCardFormats,
   FieldValueType,
 } from "@/lib/anki";
+import { Howl } from "howler";
 import { addNotesToAnki } from "@/lib/card-builder/notes";
 import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
-import { IconX } from "@tabler/icons";
+import { IconVolume, IconVolume3, IconX } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import { NoteMedia } from "@/interfaces/card_builder/NoteMedia";
+import { AudioUrl } from "@/lib/japanese";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -63,6 +66,9 @@ function CardBuilderPreview({
   const [expressionTerms, setExpressionTerms] = useState<ExpressionTerm[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasSentences, setHasSentences] = useState(false);
+  const [streamingAudioUrls, setStreamingAudioUrls] = useState<Set<string>>(
+    new Set()
+  );
   const { classes, theme } = useStyles();
 
   useEffect(() => {
@@ -118,7 +124,6 @@ function CardBuilderPreview({
       ];
       terms[index].definition!.selectedGlossary = value;
     }
-    console.log(terms[index]);
     setExpressionTerms(terms);
   };
 
@@ -140,6 +145,11 @@ function CardBuilderPreview({
                 ...term,
                 definition: { ...term.definition, selectedGlossary: value },
               };
+            case FieldValueType.Audio:
+              return {
+                ...term,
+                definition: { ...term.definition, selectedAudioUrl: value },
+              };
           }
         } else {
           return term;
@@ -148,16 +158,40 @@ function CardBuilderPreview({
     );
   };
 
-  const getWordAudio = (audioField:string, expressionTerm:ExpressionTerm) => {
+  const getWordAudio = (audioField: string, expressionTerm: ExpressionTerm) => {
     const kanji = expressionTerm.definition?.expression || "";
     const kana = expressionTerm.definition?.reading || "";
-    const audio:NoteMedia = {
-      url: `https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=${kanji}&kana=${kana}`,
+    const audio: NoteMedia = {
+      url:
+        expressionTerm.definition?.selectedAudioUrl ||
+        expressionTerm.definition?.audio_urls?.[0].url ||
+        "",
       filename: `AnkiDojo_${kanji}_${kana}.mp3`,
-      fields: audioField.length > 0 ? [audioField] : []
+      fields: audioField.length > 0 ? [audioField] : [],
     };
-    return audio
-  }
+    return audio;
+  };
+
+  const playWordAudio = (soundUrl: string) => {
+    const soundUrlWithProxy = `${process.env.PROXY}/${encodeURIComponent(
+      soundUrl
+    )}`;
+    setStreamingAudioUrls(
+      (audioUrls) => new Set([...Array.from(audioUrls), soundUrl])
+    );
+    var sound = new Howl({
+      src: [soundUrlWithProxy],
+      html5: true,
+      format: ["mp3"],
+      onplay: () => {
+        setStreamingAudioUrls(
+          (audioUrls) =>
+            new Set([...Array.from(audioUrls)].filter((x) => x !== soundUrl))
+        );
+      },
+    });
+    sound.play();
+  };
 
   const bulkAddToAnki = () => {
     const modelMap = cardFormats.find(
@@ -165,7 +199,7 @@ function CardBuilderPreview({
     )?.modelMap;
     // map fields to corresponding names in card format
     const fieldMaps: Map<string, string>[] = [];
-    const audioList:NoteMedia[] = [];
+    const audioList: NoteMedia[] = [];
     expressionTerms.forEach((expressionTerm, index) => {
       const fieldMap = new Map<string, string>();
       modelMap?.forEach((value: string, key: string) => {
@@ -177,10 +211,6 @@ function CardBuilderPreview({
             fieldMap.set(key, expressionTerm.definition?.reading || "");
             break;
           case FieldValueType.Glossary:
-            console.log(
-              "selected?",
-              expressionTerm.definition?.selectedGlossary
-            );
             fieldMap.set(
               key,
               expressionTerm.definition?.selectedGlossary ||
@@ -203,7 +233,7 @@ function CardBuilderPreview({
       });
       fieldMaps.push(fieldMap);
     });
-  
+
     const notesToAdd: NoteAddInterface[] = fieldMaps.map((fieldMap, index) => {
       return {
         deckName: selectedDeckName,
@@ -217,13 +247,10 @@ function CardBuilderPreview({
   };
 
   if (!isLoaded) {
-    return <Skeleton height={400} />
+    return <Skeleton height={400} />;
   } else if (expressionTerms.length === 0) {
-    return (
-      <Center>No words added!</Center>
-    )
+    return <Center>No words added!</Center>;
   }
-  console.log(expressionTerms)
 
   return (
     <>
@@ -235,6 +262,7 @@ function CardBuilderPreview({
         <Table striped mb={10} ml={5}>
           <thead>
             <tr style={{ marginLeft: 5 }}>
+              <th style={{ textAlign: "center" }}></th>
               <th style={{ textAlign: "center" }}>Expression</th>
               <th style={{ textAlign: "center" }}>Reading</th>
               <th style={{ textAlign: "center" }}>Glossary</th>
@@ -248,6 +276,65 @@ function CardBuilderPreview({
           <tbody>
             {expressionTerms.map((expressionTerm, index) => (
               <tr key={`expression_${index}`}>
+                <td style={{ maxWidth: 20 }}>
+                  <Menu
+                    trigger="hover"
+                    openDelay={100}
+                    closeDelay={400}
+                    withinPortal
+                  >
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="transparent"
+                        onClick={() =>
+                          playWordAudio(
+                            expressionTerm.definition?.audio_urls?.[0].url || ""
+                          )
+                        }
+                      >
+                        <IconVolume size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown style={{ background: theme.colors.dark[7] }}>
+                      <Menu.Label>Sources</Menu.Label>
+                      {expressionTerm.definition?.audio_urls?.map(
+                        (audioUrl: AudioUrl, audioIndex: number) => (
+                          <NavLink
+                            onClick={() => {
+                              playWordAudio(audioUrl.url);
+                              updateTextOfTermDefinitions(
+                                index,
+                                FieldValueType.Audio,
+                                audioUrl.url
+                              );
+                            }}
+                            color="pink"
+                            variant="light"
+                            label={audioUrl.name}
+                            rightSection={
+                              <Loader
+                                size="xs"
+                                style={{
+                                  visibility: streamingAudioUrls.has(
+                                    audioUrl.url
+                                  )
+                                    ? "visible"
+                                    : "hidden",
+                                }}
+                              />
+                            }
+                            active={
+                              expressionTerm.definition?.selectedAudioUrl
+                                ? audioUrl.url ===
+                                  expressionTerm.definition?.selectedAudioUrl
+                                : audioIndex === 0
+                            }
+                          />
+                        )
+                      )}
+                    </Menu.Dropdown>
+                  </Menu>
+                </td>
                 <td
                   suppressContentEditableWarning
                   contentEditable
@@ -327,7 +414,7 @@ function CardBuilderPreview({
                 <td style={{ margin: "0 auto" }}>
                   {expressionTerm.definition?.pitch_svg &&
                     expressionTerm.definition.pitch_svg.length > 0 && (
-                      <Menu shadow="md" width={200}>
+                      <Menu shadow="md" width={200} withinPortal>
                         <Menu.Target>
                           <UnstyledButton className={classes.pitchButton}>
                             <CardBuilderPitchSvg

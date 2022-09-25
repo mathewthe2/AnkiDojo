@@ -5,15 +5,16 @@ import json
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', 'user_files')
 
 class Settings():
-    def __init__(self):
+    def __init__(self, dev_mode=False):
+        self.settings_file = os.path.join(user_files_directory, 'ankiSettings.json' if not dev_mode else 'ankiDevSettings.json') 
         self.anki_settings = self._read_from_file()
 
     def _read_from_file(self):
-        with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'r', encoding='utf-8') as f:
+        with open(self.settings_file, 'r', encoding='utf-8') as f:
             return json.load(f)
 
     def _write_to_file(self):
-        with open(os.path.join(user_files_directory, 'ankiSettings.json'), 'w+', encoding='utf-8') as outfile:
+        with open(self.settings_file, 'w+', encoding='utf-8') as outfile:
             json.dump(self.anki_settings, outfile, indent=4, ensure_ascii=False)
 
     def get_models(self):

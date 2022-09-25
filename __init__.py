@@ -1,3 +1,4 @@
+import os
 from unittest import TextTestRunner
 from .server.config import config
 from .server.run_server import Server
@@ -26,10 +27,10 @@ def restartServer():
   server = create_server()
 
 if config['dev_mode']:
-    action = QAction("Restart AnkiDojo &Server", mw)
-    action.setShortcut(QKeySequence("Ctrl+S"))
-    action.triggered.connect(restartServer)
-    mw.form.menuTools.addAction(action)
+  action = QAction("Restart AnkiDojo &Server", mw)
+  action.setShortcut(QKeySequence("Ctrl+S"))
+  action.triggered.connect(restartServer)
+  # mw.form.menuTools.addAction(action)
 
 WINDOW_DISPLAY = False
 CLIENT_URL = "http://localhost:5008/home.html"

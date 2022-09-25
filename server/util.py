@@ -22,8 +22,8 @@ except:
     NotFoundError = Exception
 
 class AnkiHelper():
-    def __init__(self):
-        self.settings = Settings()
+    def __init__(self, dev_mode=False):
+        self.settings = Settings(dev_mode=dev_mode)
         self.ankiConnect = AnkiConnect()
 
     def collection(self):

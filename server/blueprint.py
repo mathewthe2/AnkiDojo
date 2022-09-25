@@ -1,19 +1,22 @@
 import requests
-
+from concurrent.futures import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
+from .config import config
 from .util import AnkiHelper
 from .user_apps import UserApps
 from .japanese import Japanese
 from .google_lens import get_google_lens_url
+from .scraper import Scraper
 
 from flask import (
-    Blueprint, current_app, jsonify, redirect, request, send_from_directory
+    Blueprint, Response, current_app, jsonify, redirect, request, redirect, send_from_directory, stream_with_context
 )
 
 # from .db import get_db
 
 WEBPACK_DEV_SERVER_HOST = "http://localhost:8080"
 session = requests.Session()
-ankiHelper = AnkiHelper()
+ankiHelper = AnkiHelper(dev_mode=config['dev_mode'])
 userApps = UserApps()
 
 def proxy(host, path):
@@ -31,15 +34,20 @@ def proxy(host, path):
     }
     return (response.content, response.status_code, headers)
 
+def bool_param(json_body, child):
+    return child in json_body and json_body[child] == True
+
 bp = Blueprint('mine', __name__)
 
 @bp.route('/')
 def index():
     return redirect("/home.html")
-
-# @bp.route("/media/<path:path>")
-# def get_media(path):
-#     return send_from_directory('data/media', path)
+    
+@bp.route("/p/<path:path>", methods=('GET',))
+def online_proxy(path):
+    scraper = Scraper()
+    req = scraper.get(path)
+    return Response(stream_with_context(req.iter_content()), content_type = req.headers['content-type'])
 
 @bp.route("/apps/<path:path>")
 def get_media(path):
@@ -48,7 +56,7 @@ def get_media(path):
 @bp.route("/", defaults={"path": "index.html"})
 @bp.route("/<path:path>")
 def get_app(path):
-    print('in get_app', path, current_app.config['DEV_MODE'])
+    # print('in get_app', path, current_app.config['DEV_MODE'])
     if current_app.config['DEV_MODE']:
         return proxy(WEBPACK_DEV_SERVER_HOST, "/app/" + path)
     return send_from_directory('app', path)
@@ -158,19 +166,14 @@ def terms():
             exp['glossary'] = list(exp['glossary'])
             result.append(exp)
     elif request.method == "POST":
-        content = request.get_json()
+        content = request.get_json(cache=True)
         has_one_definition = False
         if content and "keywords" in content:
             keywords = content["keywords"]
-            include_pitch_graph = "include_pitch_graph" in content
             for keyword in keywords:
                 definitions, length = language.translator.findTerm(keyword)
                 if definitions:
                     definitions[0]['glossary'] = list(definitions[0]['glossary'])
-                    if (include_pitch_graph):
-                        expression = definitions[0]['expression']
-                        reading = definitions[0]['reading']
-                        definitions[0]['pitch_svg'] = language.pitch.get_svg(expression, reading)
                     result.append(definitions[0])
                     has_one_definition = True
                 else:
@@ -185,6 +188,39 @@ def terms():
                     result.append(empty_definition)
             if not has_one_definition:
                 result = []
+
+            include_pitch_graph = bool_param(content, "include_pitch_graph")
+            if include_pitch_graph:
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    future_to_pitch_graph= {executor.submit(language.pitch.get_svg, word['expression'], word['reading']): word for word in result}
+                    for index, future in enumerate(as_completed(future_to_pitch_graph)):
+                        pitch_graph = future_to_pitch_graph[future]
+                        try:
+                            pitch_graph_result = future.result()
+                        except Exception as exc:
+                            print('%r generated an exception: %s' % (pitch_graph, exc))
+                        else:
+                            result[index]['pitch_svg'] = pitch_graph_result
+
+            include_audio_urls = bool_param(content, "include_audio_urls")
+            if include_audio_urls:
+                if current_app.config['DEV_MODE']:
+                    from .data_generator import DataGenerator
+                    dg = DataGenerator()
+                    for i in range(0, len(result)):
+                        result[i]['audio_urls'] = dg.generate_audio_urls()
+                else:
+                    with ThreadPoolExecutor(max_workers=5) as executor:
+                        future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
+                        for index, future in enumerate(as_completed(future_to_audio)):
+                            audio_source = future_to_audio[future]
+                            try:
+                                audio_result = future.result()
+                            except Exception as exc:
+                                print('%r generated an exception: %s' % (audio_source, exc))
+                            else:
+                                result[index]['audio_urls'] = audio_result
+                    
     return jsonify(result)
 
 
@@ -194,8 +230,3 @@ def google_lens_url():
         image_file = request.files.get('file')
         url = get_google_lens_url(image_file)
         return jsonify({'url': url})
-        # if 'data' in content:
-        #     # image = request.json['data']
-        #     image = content['data']
-        #     url = get_google_lens_url(image)
-        #     return jsonify({'url': url})
