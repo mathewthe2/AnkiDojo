@@ -1,9 +1,7 @@
 # AnkiDojo
 Anki card builder tailor-made for Japanese.
 
-<img width="1284" alt="image" src="https://user-images.githubusercontent.com/13146030/191484921-875790e7-3369-40cf-b6d5-38bb2e68bc24.png">
-
-
+<img width="1068" alt="image" src="https://user-images.githubusercontent.com/13146030/192142010-b8a9a082-94ec-42d1-ab3d-12c8d116e96b.png">
 
 ### Development
 
