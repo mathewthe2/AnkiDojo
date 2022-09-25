@@ -288,7 +288,7 @@ function CardBuilderPreview({
                         variant="transparent"
                         onClick={() =>
                           playWordAudio(
-                            expressionTerm.definition?.audio_urls?.[0].url || ""
+                            expressionTerm.definition?.selectedAudioUrl || expressionTerm.definition?.audio_urls?.[0].url || ""
                           )
                         }
                       >
