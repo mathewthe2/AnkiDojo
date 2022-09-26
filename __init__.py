@@ -37,7 +37,7 @@ CLIENT_URL = "http://localhost:5008/home.html"
 
 class AnkiDojoWebView(AnkiWebView):
     def __init__(self):
-        AnkiWebView.__init__(self, title="Anki Dojo")
+        AnkiWebView.__init__(self, title="AnkiDojo")
         url = QUrl(CLIENT_URL)
         # self.set_open_links_externally(False)
         self.load_url(url)
@@ -52,7 +52,7 @@ def showApp():
         openLink(QUrl(CLIENT_URL))
 
 
-action = QAction("Anki Dojo", mw)
+action = QAction("AnkiDojo", mw)
 action.setShortcut(QKeySequence("Ctrl+I"))
 
 # set it to call testFunction when it's clicked
