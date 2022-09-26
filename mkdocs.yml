@@ -9,8 +9,8 @@ copyright: AnkiDojo
 ## Social Media
 extra:
   social:
-    - icon: fontawesome/solid/house
-      link: https://mathewthe2.github.io/AnkiDojo/
+    # - icon: fontawesome/solid/house
+    #   link: https://mathewthe2.github.io/AnkiDojo/
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/MathewChan10
     - icon: fontawesome/brands/discord
