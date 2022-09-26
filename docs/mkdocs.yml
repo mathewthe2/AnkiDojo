@@ -1,0 +1,59 @@
+## Project information
+site_name: AnkiDojo
+site_description: AnkiDojo is an easy-to-use and fully-featured Japanese toolkit for Anki.
+
+# Copyright
+copyright: Game2Text
+
+## Social Media
+extra:
+  social:
+    # - icon: fontawesome/solid/home
+    #   link: 
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/MathewChan10
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/wDePbmHxE2
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/mathewthe2/AnkiDojo
+    - icon: fontawesome/solid/envelope
+      link: mailto:mchan6466@gmail.com
+
+# Repository
+repo_name: AnkiDojo
+repo_url: https://github.com/mathewthe2/AnkiDojo
+edit_uri: ''  #disables edit but
+
+## Configuration
+theme:
+  name: material
+  language: en
+  # palette:
+  #   primary: pink
+  #   accent: blue
+  palette:
+
+  # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: pink
+      accent: blue
+
+  #   # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: pink
+      accent: lime
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+## Plugins
+plugins:
+  - search
