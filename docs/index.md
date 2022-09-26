@@ -2,7 +2,7 @@
 
 AnkiDojo is an easy-to-use and fully-featured Japanese toolkit for Anki.
 
-<img src="https://user-images.githubusercontent.com/13146030/192142010-b8a9a082-94ec-42d1-ab3d-12c8d116e96b.png">
+![image](../assets/ankidojo-bulkadd.png)
 
 ## Features
 

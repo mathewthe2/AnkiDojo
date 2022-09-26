@@ -1,15 +1,16 @@
 ## Project information
 site_name: AnkiDojo
+site_url: https://mathewthe2.github.io/AnkiDojo/
 site_description: AnkiDojo is an easy-to-use and fully-featured Japanese toolkit for Anki.
 
 # Copyright
-copyright: Game2Text
+copyright: AnkiDojo
 
 ## Social Media
 extra:
   social:
-    # - icon: fontawesome/solid/home
-    #   link: 
+    - icon: fontawesome/solid/home
+      link: https://mathewthe2.github.io/AnkiDojo/
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/MathewChan10
     - icon: fontawesome/brands/discord
@@ -18,6 +19,13 @@ extra:
       link: https://github.com/mathewthe2/AnkiDojo
     - icon: fontawesome/solid/envelope
       link: mailto:mchan6466@gmail.com
+
+
+## Page tree
+nav:
+    - Home: index.md
+    - Getting Started: welcome.md
+
 
 # Repository
 repo_name: AnkiDojo
@@ -54,3 +62,9 @@ theme:
 ## Plugins
 plugins:
   - search
+
+## Extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
