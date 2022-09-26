@@ -28,9 +28,6 @@ edit_uri: ''  #disables edit but
 theme:
   name: material
   language: en
-  # palette:
-  #   primary: pink
-  #   accent: blue
   palette:
 
   # Palette toggle for light mode
