@@ -1,6 +1,6 @@
 import {
   ScrollArea,
-  UnstyledButton,
+  Highlight,
   Card,
   Group,
   Text,
@@ -79,17 +79,16 @@ function SearchResults({
                     })}
                   </Text>
                   {note?.fields.get(FieldValueType.SentenceTranslation) && (
-                    <Text>
+                    <Highlight highlightColor="pink" highlight={keyword}>
                       {parseTranslation(
                         note?.fields.get(FieldValueType.SentenceTranslation) ||
                           ""
                       )}
-                    </Text>
+                    </Highlight>
                   )}
                 </Stack>
               ) : (
                 <Stack>
-                  <Text>hello</Text>
                   <Text size="xl">
                     {parseExactSentenceWithFurigana({
                       exampleId: note?.noteId,
