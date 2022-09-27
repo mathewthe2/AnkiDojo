@@ -2,19 +2,11 @@ from aqt import mw
 import os
 import json
 import random
-from .settings import Settings
+from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
 
 # Paths
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', 'user_files')
-
-def get_reader_model_maps():
-    with open(os.path.join(user_files_directory, 'reader.json'), 'r') as f:
-        reader_config = json.load(f)
-    if 'model_maps' in reader_config:
-        return reader_config['model_maps']
-    else:
-        return None
 
 try:
     from anki.rsbackend import NotFoundError
@@ -23,7 +15,8 @@ except:
 
 class AnkiHelper():
     def __init__(self, dev_mode=False):
-        self.settings = Settings(dev_mode=dev_mode)
+        self.settings = AnkiSettings('ankiSettings.json' if not dev_mode else 'ankiDevSettings.json')
+        self.morph_settings = MorphSettings()
         self.ankiConnect = AnkiConnect()
 
     def collection(self):
@@ -40,13 +33,6 @@ class AnkiHelper():
 
         return media_server
 
-    # def media(self):
-    #     media = self.collection().media
-    #     if media is None:
-    #         raise Exception('media is not available')
-
-    #     return media
-
     def get_deck_names(self):
         deck_names = [l['name'] for l in self.collection().decks.all()]
         return deck_names
@@ -62,7 +48,7 @@ class AnkiHelper():
 
     def get_model_maps(self):
         user_models = self.get_model_names()
-        anki_settings = self.settings.anki_settings
+        anki_settings = self.settings.settings_data
         if 'model_maps' in anki_settings:
             all_model_maps = anki_settings['model_maps']
             return [{model: model_map} for model, model_map in all_model_maps.items() if model in user_models]
@@ -72,24 +58,24 @@ class AnkiHelper():
         return self.settings.update_anki_model_map(model_name, model_map)
 
     def get_primary_deck(self):
-        anki_settings = self.settings.anki_settings
+        anki_settings = self.settings.settings_data
         if "primary_deck" in anki_settings:
             return anki_settings["primary_deck"]
         else:
             return ""
     
     def update_primary_deck(self, primary_deck):
-        return self.settings.update_anki_settings({'primary_deck': primary_deck})
+        return self.settings.update_settings_data({'primary_deck': primary_deck})
 
     def get_enable_suspended(self):
-        anki_settings = self.settings.anki_settings
+        anki_settings = self.settings.settings_data
         if "enable_suspended" in anki_settings:
             return anki_settings["enable_suspended"]
         else:
             return True
     
     def update_enable_suspended(self, enable_suspended):
-        return self.settings.update_anki_settings({'enable_suspended': enable_suspended})
+        return self.settings.update_settings_data({'enable_suspended': enable_suspended})
 
     def search_notes(self, keyword, deck_name='', extra_filter='', shuffle=False, offset=0, limit=10):
         models = self.settings.get_models()
@@ -114,7 +100,7 @@ class AnkiHelper():
             try:
                 note = self.collection().get_note(note_id)
                 model = note.model()
-                model_maps = self.settings.anki_settings['model_maps']
+                model_maps = self.settings.settings_data['model_maps']
                 if model['name'] in model_maps:
                     field_map = model_maps[model['name']]
                     fields = {}
@@ -162,4 +148,16 @@ class AnkiHelper():
             #     'fields': note['fields']
             # }
             self.ankiConnect.addNote(note)
+
+    def get_known_morphs(self):
+        return self.morph_settings.get_known_morphs()
+    
+    def add_known_morphs(self, morphs):
+        return self.morph_settings.add_known_morphs(morphs)
+
+    def get_morph_state(self, morph):
+        # TODO: get other morph states apart from known
+        known_morphs = self.morph_settings.get_known_morphs()
+        return 'MORPH_STATE_KNOWN' if morph in known_morphs else ''
+
     

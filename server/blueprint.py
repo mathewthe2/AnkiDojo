@@ -103,7 +103,7 @@ def card_formats():
 def anki_primary_deck():
     if request.method == 'GET':
         primary_deck = ankiHelper.get_primary_deck()
-        return jsonify(primary_deck)
+        return jsonify(primary_deck) if len(primary_deck) > 0 else jsonify({})
     result = None
     content = request.get_json()
     if request.method == "POST":
@@ -168,68 +168,73 @@ def terms():
     elif request.method == "POST":
         content = request.get_json(cache=True)
         has_one_definition = False
+        keywords = []
+        if content and "passage" in content:
+            keywords += list(language.morph_util.get_morphemes(content["passage"]))
         if content and "keywords" in content:
-            keywords = content["keywords"]
-            for keyword in keywords:
-                definitions, length = language.translator.findTerm(keyword)
-                if definitions:
-                    definitions[0]['glossary'] = list(definitions[0]['glossary'])
-                    result.append(definitions[0])
-                    has_one_definition = True
-                else:
-                    empty_definition = {
-                        "expression": "",
-                        "reading": "",
-                        "glossary": [],
-                        "tags": [],
-                        "source": "",
-                        "rules": []
-                    }
-                    result.append(empty_definition)
-            if not has_one_definition:
-                result = []
+            keywords += content["keywords"]
+        for keyword in keywords:
+            definitions, length = language.translator.findTerm(keyword)
+            if definitions:
+                definitions[0]['glossary'] = list(definitions[0]['glossary'])
+                definitions[0]['morph_state'] = ankiHelper.get_morph_state(definitions[0]['expression'])
+                result.append(definitions[0])
+                has_one_definition = True
+            else:
+                empty_definition = {
+                    "expression": "",
+                    "reading": "",
+                    "glossary": [],
+                    "tags": [],
+                    "source": "",
+                    "rules": [],
+                    "morph_state": ""
+                }
+                result.append(empty_definition)
+        if not has_one_definition:
+            result = []
 
-            include_pitch_graph = bool_param(content, "include_pitch_graph")
-            if include_pitch_graph:
+        include_pitch_graph = bool_param(content, "include_pitch_graph")
+        if include_pitch_graph:
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_pitch_graph= {executor.submit(language.pitch.get_svg, word['expression'], word['reading']): word for word in result}
+                for future in as_completed(future_to_pitch_graph):
+                    pitch_graph = future_to_pitch_graph[future]
+                    try:
+                        pitch_graph_result = future.result()
+                    except Exception as exc:
+                        print('%r generated an exception: %s' % (pitch_graph, exc))
+                    else:
+                        for i in range(0, len(result)):
+                            if 'pitch_svg' in result[i]:
+                                continue
+                            if result[i]['expression'] == pitch_graph['expression'] and result[i]['reading'] == pitch_graph['reading']:
+                                result[i]['pitch_svg'] = pitch_graph_result
+                                break
+
+        include_audio_urls = bool_param(content, "include_audio_urls")
+        if include_audio_urls:
+            if current_app.config['DEV_MODE']:
+                from .data_generator import DataGenerator
+                dg = DataGenerator()
+                for i in range(0, len(result)):
+                    result[i]['audio_urls'] = dg.generate_audio_urls()
+            else:
                 with ThreadPoolExecutor(max_workers=5) as executor:
-                    future_to_pitch_graph= {executor.submit(language.pitch.get_svg, word['expression'], word['reading']): word for word in result}
-                    for future in as_completed(future_to_pitch_graph):
-                        pitch_graph = future_to_pitch_graph[future]
+                    future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
+                    for future in as_completed(future_to_audio):
+                        audio_source = future_to_audio[future]
                         try:
-                            pitch_graph_result = future.result()
+                            audio_result = future.result()
                         except Exception as exc:
-                            print('%r generated an exception: %s' % (pitch_graph, exc))
+                            print('%r generated an exception: %s' % (audio_source, exc))
                         else:
                             for i in range(0, len(result)):
-                                if 'pitch_svg' in result[i]:
+                                if 'audio_urls' in result[i]:
                                     continue
-                                if result[i]['expression'] == pitch_graph['expression'] and result[i]['reading'] == pitch_graph['reading']:
-                                    result[i]['pitch_svg'] = pitch_graph_result
+                                if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
+                                    result[i]['audio_urls'] = audio_result
                                     break
-
-            include_audio_urls = bool_param(content, "include_audio_urls")
-            if include_audio_urls:
-                if current_app.config['DEV_MODE']:
-                    from .data_generator import DataGenerator
-                    dg = DataGenerator()
-                    for i in range(0, len(result)):
-                        result[i]['audio_urls'] = dg.generate_audio_urls()
-                else:
-                    with ThreadPoolExecutor(max_workers=5) as executor:
-                        future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
-                        for future in as_completed(future_to_audio):
-                            audio_source = future_to_audio[future]
-                            try:
-                                audio_result = future.result()
-                            except Exception as exc:
-                                print('%r generated an exception: %s' % (audio_source, exc))
-                            else:
-                                for i in range(0, len(result)):
-                                    if 'audio_urls' in result[i]:
-                                        continue
-                                    if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
-                                        result[i]['audio_urls'] = audio_result
-                                        break
                     
     return jsonify(result)
 
