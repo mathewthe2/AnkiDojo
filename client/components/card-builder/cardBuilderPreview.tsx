@@ -27,12 +27,13 @@ import {
 import { Howl } from "howler";
 import { addNotesToAnki } from "@/lib/card-builder/notes";
 import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
-import { IconVolume, IconVolume3, IconX } from "@tabler/icons";
+import { IconVolume, IconX, IconEye, IconEyeOff } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import { NoteMedia } from "@/interfaces/card_builder/NoteMedia";
 import { AudioUrl, Definition } from "@/lib/japanese";
+import { MorphState, addMorphs, removeMorphs } from "@/lib/morphs";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -52,6 +53,15 @@ const useStyles = createStyles((theme) => ({
           : theme.colors.dark[1],
     },
   },
+  knownVocabSelect: {
+    input: {
+      border: "transparent",
+      backgroundColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[3]
+          : theme.colors.gray[4],
+    },
+  },
 }));
 
 const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
@@ -59,9 +69,11 @@ const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scrapi
 function CardBuilderPreview({
   expressionList,
   passages,
+  onSuccessCallback
 }: {
   expressionList: ExpressionTerm[];
   passages?: string[];
+  onSuccessCallback?: Function
 }) {
   const [deckNames, setDeckNames] = useState([]);
   const [selectedDeckName, setSelectedDeckName] = useState("");
@@ -99,9 +111,17 @@ function CardBuilderPreview({
               setHasSentences(true);
             }
             // add sentences if expression has sentences, eg. kindle vocab
-            const onlyUserExpression = expressionList.length === definitions.length;
-            if (onlyUserExpression && expressionList[index]?.definition?.sentences?.[0]) { // 
-              definition.sentences = [...definition.sentences || [], ...expressionList[index]?.definition?.sentences || []]
+            const onlyUserExpression =
+              expressionList.length === definitions.length;
+            if (
+              onlyUserExpression &&
+              expressionList[index]?.definition?.sentences?.[0]
+            ) {
+              //
+              definition.sentences = [
+                ...(definition.sentences || []),
+                ...(expressionList[index]?.definition?.sentences || []),
+              ];
             }
             return {
               userExpression: definition.surface || "",
@@ -209,39 +229,52 @@ function CardBuilderPreview({
     // map fields to corresponding names in card format
     const fieldMaps: Map<string, string>[] = [];
     const audioList: NoteMedia[] = [];
-    expressionTerms.forEach((expressionTerm, index) => {
-      const fieldMap = new Map<string, string>();
-      modelMap?.forEach((value: string, key: string) => {
-        switch (value) {
-          case FieldValueType.Expression:
-            fieldMap.set(key, expressionTerm.definition?.expression || "");
-            break;
-          case FieldValueType.Reading:
-            fieldMap.set(key, expressionTerm.definition?.reading || "");
-            break;
-          case FieldValueType.Glossary:
-            fieldMap.set(
-              key,
-              expressionTerm.definition?.selectedGlossary ||
-                expressionTerm.definition?.glossary?.[0] ||
-                ""
-            );
-            break;
-          case FieldValueType.PitchAccent:
-            fieldMap.set(key, expressionTerm.definition?.pitch_svg?.[0] || ""); // TODO: change selected pitch
-            break;
-          case FieldValueType.Sentence:
-            fieldMap.set(key, expressionTerm.definition?.sentences?.[0] || ""); // TODO: change selected pitch
-            break;
-          case FieldValueType.Audio:
-            audioList[index] = getWordAudio(key, expressionTerm);
-            break;
-          default:
-            break;
-        }
+    expressionTerms
+      .filter((expressionTerm) => !isTermKnown(expressionTerm))
+      .forEach((expressionTerm, index) => {
+        const fieldMap = new Map<string, string>();
+        modelMap?.forEach((value: string, key: string) => {
+          switch (value) {
+            case FieldValueType.Expression:
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.expression ||
+                  expressionTerm.definition?.surface ||
+                  ""
+              );
+              break;
+            case FieldValueType.Reading:
+              fieldMap.set(key, expressionTerm.definition?.reading || "");
+              break;
+            case FieldValueType.Glossary:
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.selectedGlossary ||
+                  expressionTerm.definition?.glossary?.[0] ||
+                  ""
+              );
+              break;
+            case FieldValueType.PitchAccent:
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.pitch_svg?.[0] || ""
+              ); // TODO: change selected pitch
+              break;
+            case FieldValueType.Sentence:
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.sentences?.[0] || ""
+              ); // TODO: change selected pitch
+              break;
+            case FieldValueType.Audio:
+              audioList[index] = getWordAudio(key, expressionTerm);
+              break;
+            default:
+              break;
+          }
+        });
+        fieldMaps.push(fieldMap);
       });
-      fieldMaps.push(fieldMap);
-    });
 
     const notesToAdd: NoteAddInterface[] = fieldMaps.map((fieldMap, index) => {
       return {
@@ -253,7 +286,53 @@ function CardBuilderPreview({
       };
     });
     addNotesToAnki(notesToAdd);
+    if (onSuccessCallback) {
+      onSuccessCallback();
+    }
   };
+
+  const isTermKnown = (term: ExpressionTerm) =>
+    term.definition?.morph_state === MorphState.KNOWN;
+
+  const toggleKnownVocab = (index: number) => {
+    const morphState = isTermKnown(expressionTerms[index])
+      ? ""
+      : MorphState.KNOWN;
+    setExpressionTerms(
+      [...expressionTerms].map((term, termIndex) => {
+        if (termIndex === index) {
+          return {
+            ...term,
+            definition: { ...term.definition, morph_state: morphState },
+          };
+        } else {
+          return term;
+        }
+      }) as ExpressionTerm[]
+    );
+    const morph =
+      expressionTerms[index].definition?.expression ||
+      expressionTerms[index].definition?.surface ||
+      null;
+    if (morph) {
+      if (morphState === MorphState.KNOWN) {
+        addMorphs(MorphState.KNOWN, [morph]);
+      } else {
+        removeMorphs(MorphState.KNOWN, [morph]);
+      }
+    }
+  };
+
+  const numberOfKnownWords = () =>
+    expressionTerms.filter(
+      (term) => term.definition?.morph_state == MorphState.KNOWN
+    ).length;
+
+  const numberOfUnknownWords = () =>
+    expressionTerms.length - numberOfKnownWords();
+
+  const KnownVocabColor =
+    theme.colorScheme === "dark" ? theme.colors.dark[3] : theme.colors.gray[4];
 
   if (!isLoaded) {
     return <Skeleton height={400} />;
@@ -264,8 +343,9 @@ function CardBuilderPreview({
   return (
     <>
       <Title color="dimmed" order={5} style={{ textAlign: "center" }}>
-        {expressionTerms.length}{" "}
-        {expressionTerms.length === 1 ? "Word" : "Words"}
+        {`${numberOfUnknownWords()} of ${expressionTerms.length} new ${
+          expressionTerms.length === 1 ? "word" : "words"
+        }`}
       </Title>
       <ScrollArea.Autosize maxHeight={500} style={{ width: "100%" }} mx="auto">
         <Table striped mb={10} ml={5}>
@@ -280,213 +360,253 @@ function CardBuilderPreview({
                 <th style={{ textAlign: "center" }}>Sentence</th>
               )}
               <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {expressionTerms.map((expressionTerm, index) => (
-              <tr key={`expression_${index}`}>
-                <td style={{ maxWidth: 20 }}>
-                  <Menu
-                    trigger="hover"
-                    openDelay={400}
-                    closeDelay={400}
-                    withinPortal
-                  >
-                    <Menu.Target>
-                      <ActionIcon
-                        variant="transparent"
-                        onClick={() =>
-                          playWordAudio(
-                            expressionTerm.definition?.selectedAudioUrl ||
-                              expressionTerm.definition?.audio_urls?.[0].url ||
-                              ""
-                          )
-                        }
-                      >
-                        <IconVolume size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown style={{ background: theme.colors.dark[7] }}>
-                      <Menu.Label>Sources</Menu.Label>
-                      {expressionTerm.definition?.audio_urls?.map(
-                        (audioUrl: AudioUrl, audioIndex: number) => (
-                          <NavLink
-                            key={`audiolink_${audioIndex}`}
-                            onClick={() => {
-                              playWordAudio(audioUrl.url);
-                              updateTextOfTermDefinitions(
-                                index,
-                                FieldValueType.Audio,
-                                audioUrl.url
-                              );
-                            }}
-                            color="pink"
-                            variant="light"
-                            label={audioUrl.name}
-                            rightSection={
-                              <Loader
-                                size="xs"
-                                style={{
-                                  visibility: streamingAudioUrls.has(
-                                    audioUrl.url
-                                  )
-                                    ? "visible"
-                                    : "hidden",
-                                }}
-                              />
-                            }
-                            active={
-                              expressionTerm.definition?.selectedAudioUrl
-                                ? audioUrl.url ===
-                                  expressionTerm.definition?.selectedAudioUrl
-                                : audioIndex === 0
-                            }
-                          />
-                        )
-                      )}
-                    </Menu.Dropdown>
-                  </Menu>
-                </td>
-                <td
-                  suppressContentEditableWarning
-                  contentEditable
-                  onInput={(e) =>
-                    updateTextOfTermDefinitions(
-                      index,
-                      FieldValueType.Expression,
-                      e.currentTarget.textContent || ""
-                    )
-                  }
+            {expressionTerms.map((expressionTerm, index) => {
+              const isKnownVocab = isTermKnown(expressionTerm);
+              return (
+                <tr
+                  key={`expression_${index}`}
                   style={{
-                    textAlign: "center",
-                    fontSize: "18px",
-                    minWidth: 100,
+                    background:
+                      expressionTerm.definition?.morph_state ===
+                      MorphState.KNOWN
+                        ? KnownVocabColor
+                        : "inherit",
                   }}
                 >
-                  {expressionTerm.definition?.expression}
-                </td>
-                <td
-                  suppressContentEditableWarning
-                  contentEditable
-                  onInput={(e) =>
-                    updateTextOfTermDefinitions(
-                      index,
-                      FieldValueType.Reading,
-                      e.currentTarget.textContent || ""
-                    )
-                  }
-                  style={{
-                    textAlign: "center",
-                    fontSize: "18px",
-                    minWidth: 100,
-                  }}
-                >
-                  {expressionTerm.definition?.reading}
-                </td>
-                <td
-                  suppressContentEditableWarning
-                  style={{ textAlign: "left", minWidth: 100 }}
-                  contentEditable={
-                    expressionTerm.definition?.glossary?.length == 1
-                  }
-                  onInput={(e) =>
-                    updateTextOfTermDefinitions(
-                      index,
-                      FieldValueType.Glossary,
-                      e.currentTarget.textContent || ""
-                    )
-                  }
-                >
-                  {expressionTerm.definition?.glossary &&
-                    expressionTerm.definition.glossary.length === 1 &&
-                    expressionTerm.definition?.glossary?.[0]}
-                  {expressionTerm.definition?.glossary &&
-                    expressionTerm.definition.glossary.length > 1 && (
-                      <Select
-                        searchable
-                        creatable
-                        getCreateLabel={(query) => `+ Use glossary: ${query}`}
-                        onCreate={(query) => {
-                          // this will override onchange
-                          addGlossaryTerm(index, query);
-                          return query;
+                  <td style={{ maxWidth: 20 }}>
+                    <Menu
+                      trigger="hover"
+                      openDelay={400}
+                      closeDelay={400}
+                      withinPortal
+                    >
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="transparent"
+                          onClick={() =>
+                            playWordAudio(
+                              expressionTerm.definition?.selectedAudioUrl ||
+                                expressionTerm.definition?.audio_urls?.[0]
+                                  .url ||
+                                ""
+                            )
+                          }
+                        >
+                          <IconVolume size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown
+                        style={{
+                          background:
+                            theme.colorScheme === "dark"
+                              ? theme.colors.dark[7]
+                              : "white",
                         }}
-                        defaultValue={expressionTerm.definition?.glossary?.[0]}
-                        data={expressionTerm.definition?.glossary || []}
-                        onChange={(newValue) =>
-                          updateTextOfTermDefinitions(
-                            index,
-                            FieldValueType.Glossary,
-                            newValue || ""
-                          )
-                        }
-                      ></Select>
-                    )}
-                </td>
-                <td style={{ margin: "0 auto" }}>
-                  {expressionTerm.definition?.pitch_svg &&
-                    expressionTerm.definition.pitch_svg.length > 0 &&
-                    (expressionTerm.definition.pitch_svg.length === 1 ? (
-                      <CardBuilderPitchSvg
-                        height={50}
-                        width={"auto"}
-                        pitch_string={
-                          expressionTerm.definition?.pitch_svg?.[0] || ""
-                        }
-                      />
-                    ) : (
-                      <Menu shadow="md" width={200} withinPortal>
-                        <Menu.Target>
-                          <UnstyledButton className={classes.pitchButton}>
-                            <CardBuilderPitchSvg
-                              height={50}
-                              width={"auto"}
-                              pitch_string={
-                                expressionTerm.definition?.pitch_svg?.[0] || ""
+                      >
+                        <Menu.Label>Sources</Menu.Label>
+                        {expressionTerm.definition?.audio_urls?.map(
+                          (audioUrl: AudioUrl, audioIndex: number) => (
+                            <NavLink
+                              key={`audiolink_${audioIndex}`}
+                              onClick={() => {
+                                playWordAudio(audioUrl.url);
+                                updateTextOfTermDefinitions(
+                                  index,
+                                  FieldValueType.Audio,
+                                  audioUrl.url
+                                );
+                              }}
+                              color="pink"
+                              variant="light"
+                              label={audioUrl.name}
+                              rightSection={
+                                <Loader
+                                  size="xs"
+                                  style={{
+                                    visibility: streamingAudioUrls.has(
+                                      audioUrl.url
+                                    )
+                                      ? "visible"
+                                      : "hidden",
+                                  }}
+                                />
+                              }
+                              active={
+                                expressionTerm.definition?.selectedAudioUrl
+                                  ? audioUrl.url ===
+                                    expressionTerm.definition?.selectedAudioUrl
+                                  : audioIndex === 0
                               }
                             />
-                          </UnstyledButton>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Label>Pitch Accents</Menu.Label>
-                          {expressionTerm.definition?.pitch_svg?.map(
-                            (svg, index) => (
-                              <Menu.Item key={`svg_${index}`}>
-                                <CardBuilderPitchSvg
-                                  height={50}
-                                  width={"auto"}
-                                  pitch_string={svg}
-                                />
-                              </Menu.Item>
-                            )
-                          )}
-                        </Menu.Dropdown>
-                      </Menu>
-                    ))}
-                </td>
-                {expressionTerm.definition?.sentences?.[0] && (
+                          )
+                        )}
+                      </Menu.Dropdown>
+                    </Menu>
+                  </td>
                   <td
                     suppressContentEditableWarning
-                    style={{ textAlign: "left" }}
+                    contentEditable
+                    onInput={(e) =>
+                      updateTextOfTermDefinitions(
+                        index,
+                        FieldValueType.Expression,
+                        e.currentTarget.textContent || ""
+                      )
+                    }
+                    style={{
+                      textAlign: "center",
+                      fontSize: "18px",
+                      minWidth: 100,
+                    }}
                   >
-                    <Highlight
-                      highlightColor="pink"
-                      highlight={expressionTerm.definition.surface || ""}
-                    >
-                      {expressionTerm.definition.sentences[0]}
-                    </Highlight>
+                    {expressionTerm.definition?.expression ||
+                      expressionTerm.definition?.surface}
                   </td>
-                )}
-                <td style={{ paddingRight: 30 }}>
-                  <ActionIcon
-                    variant="subtle"
-                    onClick={() => removeTerm(index)}
+                  <td
+                    suppressContentEditableWarning
+                    contentEditable
+                    onInput={(e) =>
+                      updateTextOfTermDefinitions(
+                        index,
+                        FieldValueType.Reading,
+                        e.currentTarget.textContent || ""
+                      )
+                    }
+                    style={{
+                      textAlign: "center",
+                      fontSize: "18px",
+                      minWidth: 100,
+                    }}
                   >
-                    <IconX size="14" />
-                  </ActionIcon>
-                </td>
-              </tr>
-            ))}
+                    {expressionTerm.definition?.reading}
+                  </td>
+                  <td
+                    suppressContentEditableWarning
+                    style={{ textAlign: "left", minWidth: 100 }}
+                    contentEditable={
+                      expressionTerm.definition?.glossary?.length == 1
+                    }
+                    onInput={(e) =>
+                      updateTextOfTermDefinitions(
+                        index,
+                        FieldValueType.Glossary,
+                        e.currentTarget.textContent || ""
+                      )
+                    }
+                  >
+                    {expressionTerm.definition?.glossary &&
+                      expressionTerm.definition.glossary.length === 1 &&
+                      expressionTerm.definition?.glossary?.[0]}
+                    {expressionTerm.definition?.glossary &&
+                      expressionTerm.definition.glossary.length > 1 && (
+                        <Select
+                          className={
+                            isKnownVocab ? classes.knownVocabSelect : ""
+                          }
+                          searchable
+                          creatable
+                          getCreateLabel={(query) => `+ Use glossary: ${query}`}
+                          onCreate={(query) => {
+                            // this will override onchange
+                            addGlossaryTerm(index, query);
+                            return query;
+                          }}
+                          defaultValue={
+                            expressionTerm.definition?.glossary?.[0]
+                          }
+                          data={expressionTerm.definition?.glossary || []}
+                          onChange={(newValue) =>
+                            updateTextOfTermDefinitions(
+                              index,
+                              FieldValueType.Glossary,
+                              newValue || ""
+                            )
+                          }
+                        ></Select>
+                      )}
+                  </td>
+                  <td style={{ margin: "0 auto" }}>
+                    {expressionTerm.definition?.pitch_svg &&
+                      expressionTerm.definition.pitch_svg.length > 0 &&
+                      (expressionTerm.definition.pitch_svg.length === 1 ? (
+                        <CardBuilderPitchSvg
+                          height={50}
+                          width={"auto"}
+                          pitch_string={
+                            expressionTerm.definition?.pitch_svg?.[0] || ""
+                          }
+                        />
+                      ) : (
+                        <Menu shadow="md" width={200} withinPortal>
+                          <Menu.Target>
+                            <UnstyledButton className={classes.pitchButton}>
+                              <CardBuilderPitchSvg
+                                height={50}
+                                width={"auto"}
+                                pitch_string={
+                                  expressionTerm.definition?.pitch_svg?.[0] ||
+                                  ""
+                                }
+                              />
+                            </UnstyledButton>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Label>Pitch Accents</Menu.Label>
+                            {expressionTerm.definition?.pitch_svg?.map(
+                              (svg, index) => (
+                                <Menu.Item key={`svg_${index}`}>
+                                  <CardBuilderPitchSvg
+                                    height={50}
+                                    width={"auto"}
+                                    pitch_string={svg}
+                                  />
+                                </Menu.Item>
+                              )
+                            )}
+                          </Menu.Dropdown>
+                        </Menu>
+                      ))}
+                  </td>
+                  {expressionTerm.definition?.sentences?.[0] && (
+                    <td
+                      suppressContentEditableWarning
+                      style={{ textAlign: "left" }}
+                    >
+                      <Highlight
+                        highlightColor="pink"
+                        highlight={expressionTerm.definition.surface || ""}
+                      >
+                        {expressionTerm.definition.sentences[0]}
+                      </Highlight>
+                    </td>
+                  )}
+                  <td>
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => toggleKnownVocab(index)}
+                    >
+                      {isKnownVocab ? (
+                        <IconEyeOff size="14" />
+                      ) : (
+                        <IconEye size="14" />
+                      )}
+                    </ActionIcon>
+                  </td>
+                  <td style={{ paddingRight: 30 }}>
+                    <ActionIcon
+                      variant="subtle"
+                      onClick={() => removeTerm(index)}
+                    >
+                      <IconX size="14" />
+                    </ActionIcon>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </Table>
       </ScrollArea.Autosize>
@@ -509,7 +629,7 @@ function CardBuilderPreview({
           onChange={(modelName: string) => setCardFormatModelName(modelName)}
         ></Select>
         <Button mt={20} fullWidth onClick={bulkAddToAnki}>
-          Bulk Add
+          Bulk Add ({numberOfUnknownWords()})
         </Button>
       </Card>
     </>

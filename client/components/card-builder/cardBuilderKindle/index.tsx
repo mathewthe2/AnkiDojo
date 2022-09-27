@@ -233,7 +233,7 @@ function CardBuilderKindle(props: Partial<DropzoneProps>) {
         withCloseButton={false}
         size="70%"
       >
-        <CardBuilderPreview expressionList={expressionList} />
+        <CardBuilderPreview expressionList={expressionList} onSuccessCallback={()=>setPreviewOpened(false)} />
       </Modal>
     </div>
   );

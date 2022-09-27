@@ -121,9 +121,9 @@ function Navigation() {
 
       <Navbar.Section className={classes.footer}>
         <a
-          href="#"
+          href="https://mathewthe2.github.io/AnkiDojo/"
+          target="_blank"
           className={classes.link}
-          onClick={(event) => event.preventDefault()}
         >
           <IconQuestionMark className={classes.linkIcon} stroke={1.5} />
           <span>Help</span>

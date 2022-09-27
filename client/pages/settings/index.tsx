@@ -1,5 +1,6 @@
 import { Container, Tabs } from "@mantine/core";
 import AnkiSettings from "@/components/settings/ankiSettings";
+import WordSettings from "@/components/settings/wordSettings";
 
 function Settings() {
   return (
@@ -11,6 +12,9 @@ function Settings() {
         </Tabs.List>
         <Tabs.Panel value="anki" pt="xs">
           <AnkiSettings />
+        </Tabs.Panel>
+        <Tabs.Panel value="known_words" pt="xs">
+          <WordSettings />
         </Tabs.Panel>
       </Tabs>
     </Container>

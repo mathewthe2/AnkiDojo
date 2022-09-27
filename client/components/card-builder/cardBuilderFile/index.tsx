@@ -131,6 +131,7 @@ function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boole
        <CardBuilderPreview
           expressionList={isVocabularyGeneration ? createExpressionList(userText!.split(/[\r\n]+/)) : []}
           passages={isVocabularyGeneration ? [] : [userText]}
+          onSuccessCallback={()=>setPreviewOpened(false)}
         />
       </Modal>
     </div>

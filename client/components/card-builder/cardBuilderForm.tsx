@@ -105,6 +105,7 @@ function CardBuilderForm() {
               : []
           }
           passages={isVocabularyGeneration() ? [] : [userText]}
+          onSuccessCallback={()=>setOpened(false)}
         />
       </Modal>
       <Grid>

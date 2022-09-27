@@ -152,8 +152,14 @@ class AnkiHelper():
     def get_known_morphs(self):
         return self.morph_settings.get_known_morphs()
     
-    def add_known_morphs(self, morphs):
-        return self.morph_settings.add_known_morphs(morphs)
+    def update_known_morphs(self, morphs):
+        return self.morph_settings.update_settings_data({'MORPH_STATE_KNOWN': morphs})
+
+    def add_morphs(self, morphs, morph_state):
+        return self.morph_settings.add_morphs(morphs, morph_state)
+
+    def remove_morphs(self, morphs, morph_state):
+        return self.morph_settings.remove_morphs(morphs, morph_state)
 
     def get_morph_state(self, morph):
         # TODO: get other morph states apart from known

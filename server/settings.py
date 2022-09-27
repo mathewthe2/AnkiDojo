@@ -57,10 +57,22 @@ class MorphSettings(Settings):
             return self.settings_data['MORPH_STATE_KNOWN']
         else:
             return []
+    
+    def get_morphs_by_state(self, state):
+        if state in self.settings_data:
+            return self.settings_data[state]
+        else:
+            return []
 
-    def add_known_morphs(self, morphs):
-        known_morphs = self.get_known_morphs()
-        combined = list(set(known_morphs + morphs))
-        super().update_settings_data({'MORPH_STATE_KNOWN': combined})
+    def add_morphs(self, morphs, state):
+        existing_morphs = self.get_morphs_by_state(state)
+        combined = list(set(existing_morphs + morphs))
+        super().update_settings_data({state: combined})
         return combined
+
+    def remove_morphs(self, morphs_to_remove, state):
+        existing_morphs = self.get_morphs_by_state(state)
+        morphs = [morph for morph in existing_morphs if morph not in morphs_to_remove]
+        super().update_settings_data({state: morphs})
+        return morphs
         
