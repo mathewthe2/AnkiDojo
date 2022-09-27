@@ -258,8 +258,8 @@ if __name__ == '__main__':
             'reading': 'はしる',
         },
           {
-            'expression': '適当',
-            'reading': 'てきとう',
+            'expression': '元',
+            'reading': 'もと',
         }
     ]
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:

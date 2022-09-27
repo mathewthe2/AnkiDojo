@@ -1,6 +1,7 @@
 from aqt import mw
 import os
-import json
+from concurrent.futures import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
 import random
 from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
@@ -142,12 +143,18 @@ class AnkiHelper():
         }
 
     def add_notes(self, notes):
-        # TODO: add media
-        for note in notes:
-            # ankiConnectNote = {
-            #     'fields': note['fields']
-            # }
-            self.ankiConnect.addNote(note)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_note_id = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
+            for future in as_completed(future_to_note_id):
+                note_id = future_to_note_id[future]
+                try:
+                    note_id_result = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (note_id, exc))
+                else:
+                    pass
+        # for note in notes:
+        #     self.ankiConnect.addNote(note)
 
     def get_known_morphs(self):
         return self.morph_settings.get_known_morphs()
