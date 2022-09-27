@@ -193,7 +193,7 @@ function CardBuilderPreview({
     const audio: NoteMedia = {
       url:
         expressionTerm.definition?.selectedAudioUrl ||
-        expressionTerm.definition?.audio_urls?.[0].url ||
+        expressionTerm.definition?.audio_urls?.[0]?.url ||
         "",
       filename: `AnkiDojo_${kanji}_${kana}.mp3`,
       fields: audioField.length > 0 ? [audioField] : [],
