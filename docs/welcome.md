@@ -8,6 +8,8 @@ In Anki, select *Tools > Add-ons > Get Add-ons*, and paste the code: *433778282*
 
 <img src="../assets/anki-install-addon.png" alt="anki-install-addon" width="400">
 
+You will also need to install [Mecab Unidic Addon](https://github.com/ianki/MecabUnidic/releases/download/v3.1.0/MecabUnidic3.1.0.ankiaddon) to unlock all of AnkiDojo's functionality. Double click on the addon file with Anki active, and restart Anki once installation is complete. 
+
 ## Launching AnkiDojo
 
 After installation, restart Anki and launch AnkiDojo from Tools > AnkiDojo. 
