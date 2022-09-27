@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import threading
+from .reader_util import findSentence
 
 # Credit to ianki
 # https://github.com/ianki/AnkiMine
@@ -32,6 +33,21 @@ class MorphUtil():
                     continue
                 morphemes.add(m.lemma)
             return morphemes
+
+    def get_morphemes_with_sentences(self, expression):
+         with morphemizer_lock():
+            morpheme_map = {}
+            surface_map = {}
+            morphs = getRawMorphemesFromExpr(expression)
+            for m in morphs:
+                if m.pos1 in self.MECAB_POS_BLACKLIST or \
+                m.pos2 in self.MECAB_SUBPOS_BLACKLIST:
+                    continue
+                if m.lemma not in morpheme_map:
+                    morpheme_map[m.lemma] = set()
+                morpheme_map[m.lemma].add(findSentence(expression, expression.find(m.surface)))
+                surface_map[m.lemma] = m.surface
+            return morpheme_map, surface_map
 
 # List of features in Unidic 22 format dictionary
 # f[0]:  pos1

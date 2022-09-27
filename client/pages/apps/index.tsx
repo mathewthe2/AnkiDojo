@@ -8,7 +8,7 @@ import AppsGrid from "@/components/apps/appsGrid";
 function Apps() {
 
   return (
-    <Container fluid pt={20}>
+    <Container fluid pt={42}>
       {/* <ActionsGrid />
       <Divider mb={20} /> */}
       <AppsGrid/>

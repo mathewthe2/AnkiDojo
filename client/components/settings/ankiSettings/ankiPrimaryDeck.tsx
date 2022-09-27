@@ -6,8 +6,14 @@ function AnkiPrimaryDeck() {
   const [deckNames, setDeckNames] = useState([]);
   const [inputPrimaryDeck, setInputPrimaryDeck] = useState<string | null>(null);
   useEffect(() => {
-    getDeckNames().then((deckNames) => setDeckNames(deckNames.sort()));
-    getPrimaryDeck().then((primaryDeck) => setInputPrimaryDeck(primaryDeck));
+    getDeckNames().then((deckNames) => {
+      setDeckNames(deckNames.sort());
+      getPrimaryDeck().then((primaryDeck) => {
+        if (deckNames.includes(primaryDeck)) {
+          setInputPrimaryDeck(primaryDeck);
+        }
+      });
+    });
   }, []);
 
   const updatePrimaryDeck = (primaryDeck: string) => {
@@ -16,7 +22,7 @@ function AnkiPrimaryDeck() {
   }
   return (
     <>
-      {inputPrimaryDeck && deckNames && (
+      {deckNames && (
         <Select
           label={<Text mb={10}>Primary Deck</Text>}
           placeholder="Select deck"

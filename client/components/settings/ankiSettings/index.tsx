@@ -33,10 +33,10 @@ function AnkiSettings() {
   const { classes, theme } = useStyles();
 
   return (
-    <Box mt={20}>
-      <Text mb={20} className={classes.title}>
+    <Box mt={10}>
+      {/* <Text mb={20} className={classes.title}>
         Anki
-      </Text>
+      </Text> */}
       <AnkiPrimaryDeck />
       <Tabs mt={20} defaultValue="card-formats">
         <Tabs.List>

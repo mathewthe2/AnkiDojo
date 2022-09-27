@@ -1,5 +1,7 @@
+import { Title } from "@mantine/core"
+
 function Jukebox() {
-    return <>jukebox. Under construction </>
+    return <Title>Jukebox. Under construction </Title>
 }
 
 export default Jukebox

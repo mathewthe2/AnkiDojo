@@ -32,7 +32,7 @@ import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import { NoteMedia } from "@/interfaces/card_builder/NoteMedia";
-import { AudioUrl } from "@/lib/japanese";
+import { AudioUrl, Definition } from "@/lib/japanese";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -54,10 +54,14 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
+const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
+
 function CardBuilderPreview({
   expressionList,
+  passages,
 }: {
   expressionList: ExpressionTerm[];
+  passages?: string[];
 }) {
   const [deckNames, setDeckNames] = useState([]);
   const [selectedDeckName, setSelectedDeckName] = useState("");
@@ -80,27 +84,27 @@ function CardBuilderPreview({
         setCardFormatModelName(cardFormats[0].modelName);
       }
     });
-    // combine existing definition (including sentence) with anki definition
-    getTermDefinitions(
-      expressionList.map(
+
+    getTermDefinitions({
+      keywords: expressionList.map(
         (expression: ExpressionTerm) => expression.userExpression
-      )
-    ).then((definitions) => {
-      if (!isLoaded && expressionList.length === definitions?.length) {
-        setExpressionTerms(
-          expressionList.map((expression: ExpressionTerm, index: number) => {
-            if (
-              typeof expression.definition != "undefined" &&
-              expression.definition
-            ) {
+      ),
+      passages: passages,
+      include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO,
+    }).then((definitions) => {
+      if (!isLoaded) {
+        const expressionTerms: ExpressionTerm[] = definitions.map(
+          (definition: Definition) => {
+            if (definition.sentences && definition.sentences.length > 0) {
               setHasSentences(true);
             }
             return {
-              userExpression: expression.userExpression,
-              definition: { ...expression.definition, ...definitions[index] },
+              userExpression: definition.surface || "",
+              definition: definition,
             };
-          })
+          }
         );
+        setExpressionTerms(expressionTerms);
       }
       setIsLoaded(true);
     });
@@ -222,7 +226,7 @@ function CardBuilderPreview({
             fieldMap.set(key, expressionTerm.definition?.pitch_svg?.[0] || ""); // TODO: change selected pitch
             break;
           case FieldValueType.Sentence:
-            fieldMap.set(key, expressionTerm.definition?.sentence || ""); // TODO: change selected pitch
+            fieldMap.set(key, expressionTerm.definition?.sentences?.[0] || ""); // TODO: change selected pitch
             break;
           case FieldValueType.Audio:
             audioList[index] = getWordAudio(key, expressionTerm);
@@ -288,7 +292,9 @@ function CardBuilderPreview({
                         variant="transparent"
                         onClick={() =>
                           playWordAudio(
-                            expressionTerm.definition?.selectedAudioUrl || expressionTerm.definition?.audio_urls?.[0].url || ""
+                            expressionTerm.definition?.selectedAudioUrl ||
+                              expressionTerm.definition?.audio_urls?.[0].url ||
+                              ""
                           )
                         }
                       >
@@ -414,16 +420,16 @@ function CardBuilderPreview({
                 </td>
                 <td style={{ margin: "0 auto" }}>
                   {expressionTerm.definition?.pitch_svg &&
-                    expressionTerm.definition.pitch_svg.length > 0 && (
-                      expressionTerm.definition.pitch_svg.length === 1 ?
+                    expressionTerm.definition.pitch_svg.length > 0 &&
+                    (expressionTerm.definition.pitch_svg.length === 1 ? (
                       <CardBuilderPitchSvg
-                      height={50}
-                      width={"auto"}
-                      pitch_string={
-                        expressionTerm.definition?.pitch_svg?.[0] || ""
-                      }
-                    />
-                    :
+                        height={50}
+                        width={"auto"}
+                        pitch_string={
+                          expressionTerm.definition?.pitch_svg?.[0] || ""
+                        }
+                      />
+                    ) : (
                       <Menu shadow="md" width={200} withinPortal>
                         <Menu.Target>
                           <UnstyledButton className={classes.pitchButton}>
@@ -451,22 +457,22 @@ function CardBuilderPreview({
                           )}
                         </Menu.Dropdown>
                       </Menu>
-                    )}
+                    ))}
                 </td>
-                {expressionTerm.definition?.sentence && (
+                {expressionTerm.definition?.sentences?.[0] && (
                   <td
                     suppressContentEditableWarning
                     style={{ textAlign: "left" }}
                   >
                     <Highlight
                       highlightColor="pink"
-                      highlight={expressionTerm.userExpression}
+                      highlight={expressionTerm.definition.surface || ""}
                     >
-                      {expressionTerm.definition.sentence}
+                      {expressionTerm.definition.sentences[0]}
                     </Highlight>
                   </td>
                 )}
-                <td style={{paddingRight: 30}}>
+                <td style={{ paddingRight: 30 }}>
                   <ActionIcon
                     variant="subtle"
                     onClick={() => removeTerm(index)}

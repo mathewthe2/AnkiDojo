@@ -103,7 +103,7 @@ def card_formats():
 def anki_primary_deck():
     if request.method == 'GET':
         primary_deck = ankiHelper.get_primary_deck()
-        return jsonify(primary_deck) if len(primary_deck) > 0 else jsonify({})
+        return jsonify(primary_deck) if primary_deck else jsonify({})
     result = None
     content = request.get_json()
     if request.method == "POST":
@@ -169,29 +169,49 @@ def terms():
         content = request.get_json(cache=True)
         has_one_definition = False
         keywords = []
-        if content and "passage" in content:
-            keywords += list(language.morph_util.get_morphemes(content["passage"]))
+        keyword_passage_map = {}
+        has_passages = content and "passages" in content and content["passages"]
+        if has_passages:
+            for passage in content["passages"]:
+                passage_morph_map, keyword_surface_map = language.morph_util.get_morphemes_with_sentences(passage)
+                for keyword, sentences in passage_morph_map.items():
+                    # ensure unqiue keyword but allow multiple sentences per keyword
+                    if keyword in keyword_passage_map:
+                        keyword_passage_map[keyword] = list(set(sentences + keyword_passage_map[keyword])) 
+                    else:
+                        keyword_passage_map[keyword] = list(sentences) 
+            keywords += keyword_passage_map.keys()
+
         if content and "keywords" in content:
-            keywords += content["keywords"]
+            user_keywords = set(content['keywords'])
+            keywords += user_keywords
         for keyword in keywords:
-            definitions, length = language.translator.findTerm(keyword)
-            if definitions:
-                definitions[0]['glossary'] = list(definitions[0]['glossary'])
-                definitions[0]['morph_state'] = ankiHelper.get_morph_state(definitions[0]['expression'])
-                result.append(definitions[0])
-                has_one_definition = True
-            else:
-                empty_definition = {
+            definitions, _ = language.translator.findTerm(keyword)
+            definition = {
                     "expression": "",
                     "reading": "",
+                    "surface": "",
                     "glossary": [],
                     "tags": [],
                     "source": "",
                     "rules": [],
+                    "sentences": [],
                     "morph_state": ""
-                }
-                result.append(empty_definition)
-        if not has_one_definition:
+            }
+            if definitions:
+                definition.update(definitions[0])
+                definition['glossary'] = list(definitions[0]['glossary'])
+                definition['morph_state']= ankiHelper.get_morph_state(definitions[0]['expression'])
+                has_one_definition = True
+            if has_passages:
+                if keyword in keyword_passage_map:
+                    definition["sentences"] = keyword_passage_map[keyword]
+                if keyword in keyword_surface_map:
+                    definition["surface"] = keyword_surface_map[keyword]
+            if keyword in user_keywords:
+                definition["surface"] = keyword 
+            result.append(definition)
+        if not has_one_definition: # TODO: handle case for empty definitions but with sentences
             result = []
 
         include_pitch_graph = bool_param(content, "include_pitch_graph")
