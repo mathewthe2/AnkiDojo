@@ -187,7 +187,7 @@ def terms():
             keywords += user_keywords
         for keyword in keywords:
             if has_passages and keyword in keyword_kana_map:
-                definitions, _ = language.translator.findTermWithReading(keyword, keyword_surface_map[keyword])
+                definitions, _ = language.translator.findTermWithReading(keyword, keyword_kana_map[keyword])
             else:
                 definitions, _ = language.translator.findTerm(keyword)
             definition = {
