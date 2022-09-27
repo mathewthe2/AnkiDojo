@@ -7,6 +7,7 @@ import subprocess
 import sys
 import threading
 from .reader_util import findSentence
+from .util import kaner
 
 # Credit to ianki
 # https://github.com/ianki/AnkiMine
@@ -17,7 +18,8 @@ class MorphUtil():
         '記号',  # "symbol", generally punctuation
         '補助記号',  # "symbol", generally punctuation
         '空白',  # Empty space
-        '助詞' # Particles
+        '助詞', # Particles
+        '助動詞', # Auxiliary verbs
     ]
     MECAB_SUBPOS_BLACKLIST = [
         '数詞',  # Numbers
@@ -31,13 +33,14 @@ class MorphUtil():
                 if m.pos1 in self.MECAB_POS_BLACKLIST or \
                 m.pos2 in self.MECAB_SUBPOS_BLACKLIST:
                     continue
-                morphemes.add(m.lemma)
+                morphemes.add(m.lemma + ' (' + m.kanaBase + ')' + ': ' + m.pos1 + ', ' + m.pos2)
             return morphemes
 
     def get_morphemes_with_sentences(self, expression):
          with morphemizer_lock():
             morpheme_map = {}
             surface_map = {}
+            kana_map = {}
             morphs = getRawMorphemesFromExpr(expression)
             for m in morphs:
                 if m.pos1 in self.MECAB_POS_BLACKLIST or \
@@ -47,7 +50,8 @@ class MorphUtil():
                     morpheme_map[m.lemma] = set()
                 morpheme_map[m.lemma].add(findSentence(expression, expression.find(m.surface)))
                 surface_map[m.lemma] = m.surface
-            return morpheme_map, surface_map
+                kana_map[m.lemma] = kaner(m.kanaBase, True)
+            return morpheme_map, surface_map, kana_map
 
 # List of features in Unidic 22 format dictionary
 # f[0]:  pos1

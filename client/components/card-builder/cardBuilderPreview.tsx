@@ -94,9 +94,14 @@ function CardBuilderPreview({
     }).then((definitions) => {
       if (!isLoaded) {
         const expressionTerms: ExpressionTerm[] = definitions.map(
-          (definition: Definition) => {
+          (definition: Definition, index: number) => {
             if (definition.sentences && definition.sentences.length > 0) {
               setHasSentences(true);
+            }
+            // add sentences if expression has sentences, eg. kindle vocab
+            const onlyUserExpression = expressionList.length === definitions.length;
+            if (onlyUserExpression && expressionList[index]?.definition?.sentences?.[0]) { // 
+              definition.sentences = [...definition.sentences || [], ...expressionList[index]?.definition?.sentences || []]
             }
             return {
               userExpression: definition.surface || "",
@@ -354,7 +359,7 @@ function CardBuilderPreview({
                   }
                   style={{
                     textAlign: "center",
-                    fontSize: "24px",
+                    fontSize: "18px",
                     minWidth: 100,
                   }}
                 >

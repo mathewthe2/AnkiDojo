@@ -77,12 +77,12 @@ function CardBuilderForm() {
               />
             </Grid.Col>
             <Grid.Col span={2}>
-              {/* <Text pl={12} size="xs" color="dimmed">
+              <Text pl={12} size="xs" color="dimmed">
                 General
               </Text>
               <CardBuilderPhoto />
               <CardBuilderFile />
-              <Text pl={12} pt={10} size="xs" color="dimmed">
+              {/* <Text pl={12} pt={10} size="xs" color="dimmed">
                 Reader
               </Text>
               <CardBuilderKindle /> */}
@@ -96,7 +96,7 @@ function CardBuilderForm() {
         opened={opened}
         onClose={() => setOpened(false)}
         withCloseButton={false}
-        size="70%"
+        size="80%"
       >
         <CardBuilderPreview
           expressionList={
@@ -124,14 +124,6 @@ function CardBuilderForm() {
         </Grid.Col>
         <Grid.Col span={2}></Grid.Col>
       </Grid>
-
-      {/* <Grid.Col span={2}>
-          <Text pl={12} size="xs" color="dimmed">General</Text>
-          <CardBuilderPhoto />
-          <CardBuilderFile />
-          <Text pl={12} pt={10} size="xs" color="dimmed">Reader</Text>
-          <CardBuilderKindle />
-        </Grid.Col> */}
     </>
   );
 }

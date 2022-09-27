@@ -173,7 +173,7 @@ def terms():
         has_passages = content and "passages" in content and content["passages"]
         if has_passages:
             for passage in content["passages"]:
-                passage_morph_map, keyword_surface_map = language.morph_util.get_morphemes_with_sentences(passage)
+                passage_morph_map, keyword_surface_map, keyword_kana_map  = language.morph_util.get_morphemes_with_sentences(passage)
                 for keyword, sentences in passage_morph_map.items():
                     # ensure unqiue keyword but allow multiple sentences per keyword
                     if keyword in keyword_passage_map:
@@ -183,10 +183,13 @@ def terms():
             keywords += keyword_passage_map.keys()
 
         if content and "keywords" in content:
-            user_keywords = set(content['keywords'])
+            user_keywords = content['keywords'] # can have repeats for user input keywords
             keywords += user_keywords
         for keyword in keywords:
-            definitions, _ = language.translator.findTerm(keyword)
+            if has_passages and keyword in keyword_kana_map:
+                definitions, _ = language.translator.findTermWithReading(keyword, keyword_surface_map[keyword])
+            else:
+                definitions, _ = language.translator.findTerm(keyword)
             definition = {
                     "expression": "",
                     "reading": "",
@@ -265,3 +268,11 @@ def google_lens_url():
         image_file = request.files.get('file')
         url = get_google_lens_url(image_file)
         return jsonify({'url': url})
+
+
+@bp.route("/api/morphs")
+def get_morphs():
+    language = Japanese()
+    data = request.args.get('data', type=str, default='')
+    morphs = language.morph_util.get_morphemes(data)
+    return jsonify(list(morphs))

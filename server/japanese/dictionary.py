@@ -26,7 +26,7 @@ class Dictionary:
         self.indices = set()
 
 
-    def findTerm(self, text, wildcards=False):
+    def findTerm(self, text, wildcards=False, reading=None):
         self.requireIndex('Vocab', 'expression')
         self.requireIndex('Vocab', 'reading')
         self.requireIndex('VocabGloss', 'vocabId')
@@ -34,7 +34,10 @@ class Dictionary:
         cursor = self.db.cursor()
 
         definitions = []
-        cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? OR reading=?'.format('LIKE' if wildcards else '='), (text, text))
+        if reading:
+            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? AND reading=?'.format('LIKE' if wildcards else '='), (text, reading))
+        else:
+            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? OR reading=?'.format('LIKE' if wildcards else '='), (text, text))    
         for vocabId, expression, reading, tags in cursor.fetchall():
             tags = tags.split()
 

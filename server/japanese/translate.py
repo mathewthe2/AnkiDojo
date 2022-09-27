@@ -25,8 +25,14 @@ class Translator:
         self.deinflector = deinflector
         self.dictionary  = dictionary
 
+    def findTermWithReading(self, text, reading):
+        definitions, length = self.findTerm(text, reading=reading)
+        if definitions:
+            return definitions, length
+        else:
+            return self.findTerm(text)
 
-    def findTerm(self, text, wildcards=False):
+    def findTerm(self, text, wildcards=False, reading=None):
         if wildcards:
             text = re.sub(u'[\*＊]', u'%', text)
             text = re.sub(u'[\?？]', u'_', text)
@@ -35,12 +41,12 @@ class Translator:
         for i in range(len(text), 0, -1):
             term = text[:i]
 
-            dfs = self.deinflector.deinflect(term, lambda term: [d['tags'] for d in self.dictionary.findTerm(term)])
+            dfs = self.deinflector.deinflect(term, lambda term: [d['tags'] for d in self.dictionary.findTerm(term, reading=reading)])
             if dfs is None:
                 continue
 
             for df in dfs:
-                self.processTerm(groups, **df)
+                self.processTerm(groups, **df, reading=reading)
 
         definitions = groups.values()
         definitions = sorted(
@@ -74,8 +80,8 @@ class Translator:
         return results
 
 
-    def processTerm(self, groups, source, tags, rules=[], root='', wildcards=False):
-        for entry in self.dictionary.findTerm(root, wildcards):
+    def processTerm(self, groups, source, tags, rules=[], root='', reading=None, wildcards=False):
+        for entry in self.dictionary.findTerm(root, wildcards, reading=reading):
             if entry['id'] in groups:
                 continue
 
@@ -94,3 +100,16 @@ class Translator:
                     'source':     source,
                     'rules':      rules
                 }
+
+if __name__ == '__main__':
+    import os
+    from dictionary import Dictionary
+    from deinflect import Deinflector
+    directory = os.path.dirname(__file__)
+    t = Translator(
+            Deinflector(os.path.join(directory, 'deinflect.json')),
+            Dictionary(os.path.join(directory, 'dictionary.db')))
+    defs, _ = t.findTermWithReading('中', 'なか')
+    print(list(defs[0]['glossary']))
+    defs, _ = t.findTerm('中')
+    print(list(defs[0]['glossary']))

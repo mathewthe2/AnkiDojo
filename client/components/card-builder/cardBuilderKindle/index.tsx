@@ -116,7 +116,7 @@ function CardBuilderKindle(props: Partial<DropzoneProps>) {
   const previewVocabulary = (vocabularyItems: KindleVocab[]) => {
     const expressionList:ExpressionTerm[] = vocabularyItems.map((vocabulary:KindleVocab)=>{
         const definition:Definition = {
-            sentence: vocabulary.context
+            sentences: [vocabulary.context]
         }
         return {
             userExpression: vocabulary.selection,

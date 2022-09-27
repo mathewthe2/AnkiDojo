@@ -9,7 +9,7 @@ import { toHiragana } from "wanakana";
 function DictionaryResults({ keyword }: { keyword: string }) {
   const { data: definitions, isFetching: isLoading } = useQuery(
     ["terms", keyword],
-    () => getTermDefinitions(getKeywords(keyword.split(" "))),
+    () => getTermDefinitions({keywords: getKeywords(keyword.split(" ")), include_audio_urls: false}),
     { enabled: keyword.length > 0 }
   );
 

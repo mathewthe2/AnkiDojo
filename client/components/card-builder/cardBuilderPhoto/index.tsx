@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import { useMantineTheme, Group, Modal, Text, NavLink } from "@mantine/core";
 import {
   Dropzone,
-  DropzoneProps,
   IMAGE_MIME_TYPE,
   FileWithPath,
 } from "@mantine/dropzone";
 import { IconUpload, IconX, IconPhoto } from "@tabler/icons";
 import { getGoogleLensUrl } from "@/lib/card-builder/photo";
 
-function CardBuilderPhoto(props: Partial<DropzoneProps>) {
+function CardBuilderPhoto() {
   const theme = useMantineTheme();
   const [files, setFiles] = useState<FileWithPath[]>([]);
   const [opened, setOpened] = useState(false);
@@ -49,7 +48,6 @@ function CardBuilderPhoto(props: Partial<DropzoneProps>) {
           multiple={false}
           maxSize={3 * 1024 ** 2}
           accept={IMAGE_MIME_TYPE}
-          {...props}
         >
           <Group
             position="center"

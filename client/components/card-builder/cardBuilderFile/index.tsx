@@ -17,11 +17,11 @@ import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import createExpressionList from "@/lib/card-builder/createExpressionList";
 import { IconUpload, IconX, IconFile } from "@tabler/icons";
 
-function CardBuilderFile(props: Partial<DropzoneProps>) {
+function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boolean}) {
   const theme = useMantineTheme();
   const [files, setFiles] = useState<FileWithPath[]>([]);
   const [dropModalOpened, setDropModalOpened] = useState(false);
-  const [expressionList, setExpressionList] = useState<ExpressionTerm[]>([]);
+  const [userText, setUserText] = useState('');
   const [previewOpened, setPreviewOpened] = useState(false);
 
   useEffect(() => {
@@ -37,7 +37,10 @@ function CardBuilderFile(props: Partial<DropzoneProps>) {
         const reader = new FileReader();
         reader.onload = function (e) {
           const content = reader.result as string;
-          previewVocabulary(content!.split(/[\r\n]+/));
+          setUserText(content);
+          // previewVocabulary(content!.split(/[\r\n]+/));
+          setDropModalOpened(false);
+          setPreviewOpened(true);
         };
         reader.readAsText(file);
         break;
@@ -46,11 +49,11 @@ function CardBuilderFile(props: Partial<DropzoneProps>) {
     }
   };
 
-  const previewVocabulary = (vocabularyItems: string[]) => {
-    setExpressionList(createExpressionList(vocabularyItems));
-    setDropModalOpened(false);
-    setPreviewOpened(true);
-  };
+  // const previewVocabulary = (vocabularyItems: string[]) => {
+  //   // setExpressionList(createExpressionList(vocabularyItems));
+  //   setDropModalOpened(false);
+  //   setPreviewOpened(true);
+  // };
 
   return (
     <div>
@@ -79,7 +82,6 @@ function CardBuilderFile(props: Partial<DropzoneProps>) {
           //   "text/plain",
           //   "application/json",
           // ]}
-          {...props}
         >
           <Group
             position="center"
@@ -124,9 +126,12 @@ function CardBuilderFile(props: Partial<DropzoneProps>) {
         opened={previewOpened}
         onClose={() => setPreviewOpened(false)}
         withCloseButton={false}
-        size="70%"
+        size="80%"
       >
-        <CardBuilderPreview expressionList={expressionList} />
+       <CardBuilderPreview
+          expressionList={isVocabularyGeneration ? createExpressionList(userText!.split(/[\r\n]+/)) : []}
+          passages={isVocabularyGeneration ? [] : [userText]}
+        />
       </Modal>
     </div>
   );
