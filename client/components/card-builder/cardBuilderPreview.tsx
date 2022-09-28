@@ -27,7 +27,7 @@ import {
 } from "@/lib/anki";
 import { Howl } from "howler";
 import { addNotesToAnki, hasMecabSupport } from "@/lib/card-builder/notes";
-import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
+import NoteAddInterface from "@/interfaces/card_builder/NoteAddInterface";
 import { IconVolume, IconX, IconEye, IconEyeOff } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 import CardBuilderPitchSvg from "./cardBuilderPitchSvg";
@@ -125,21 +125,25 @@ function CardBuilderPreview({
         if (!isLoaded) {
           const expressionTerms: ExpressionTerm[] = definitions.map(
             (definition: Definition, index: number) => {
+              // add sentences if expression has sentences, eg. import json / kindle vocab
+              const onlyUserExpression =
+                expressionList.length === definitions.length;
+
+              const combineExistingArrays = <U extends keyof Definition>(dictionaryKey:U) => {
+                if (onlyUserExpression && expressionList[index]?.definition?.[dictionaryKey]?.[0]) {
+                  definition[dictionaryKey] = [
+                      ...(definition[dictionaryKey] as string[] || []),
+                      ...(expressionList[index]?.definition?.[dictionaryKey] as string[] || []),
+                    ] as Definition[U];
+                }
+              }
+              combineExistingArrays('sentences');
+              combineExistingArrays('sentence_translations');
               if (definition.sentences && definition.sentences.length > 0) {
                 setHasSentences(true);
               }
-              // add sentences if expression has sentences, eg. kindle vocab
-              const onlyUserExpression =
-                expressionList.length === definitions.length;
-              if (
-                onlyUserExpression &&
-                expressionList[index]?.definition?.sentences?.[0]
-              ) {
-                //
-                definition.sentences = [
-                  ...(definition.sentences || []),
-                  ...(expressionList[index]?.definition?.sentences || []),
-                ];
+              if (expressionList[index]?.definition?.audio_urls?.[0]) {
+                definition.audio_urls = [...expressionList[index]?.definition?.audio_urls || [], ...definition.audio_urls || []];
               }
               return {
                 userExpression: definition.surface || "",
@@ -283,7 +287,13 @@ function CardBuilderPreview({
               fieldMap.set(
                 key,
                 expressionTerm.definition?.sentences?.[0] || ""
-              ); // TODO: change selected pitch
+              );
+              break;
+            case FieldValueType.SentenceTranslation:
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.sentence_translations?.[0] || ""
+              );
               break;
             case FieldValueType.Audio:
               audioList[index] = getWordAudio(key, expressionTerm);
@@ -358,7 +368,7 @@ function CardBuilderPreview({
   } else if (mecabMissing) {
     return (
       <Center>
-        <Text style={{textAlign: 'center'}}>
+        <Text style={{ textAlign: "center" }}>
           Mecab Support Addon is missing.
           <br />
           Please install{" "}
@@ -618,8 +628,17 @@ function CardBuilderPreview({
                       >
                         {expressionTerm.definition.sentences[0]}
                       </Highlight>
+                      {expressionTerm.definition
+                        ?.sentence_translations?.[0] && (
+                        <Text style={{fontStyle: 'italic'}}>
+                          {expressionTerm.definition.sentence_translations[0]}
+                        </Text>
+                      )}
                     </td>
                   )}
+                  {/* no sentences for this expression but has sentences for others */}
+                  {expressionTerm.definition?.sentences?.length === 0 &&
+                    hasSentences && <td></td>}
                   <td>
                     <ActionIcon
                       variant="subtle"

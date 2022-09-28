@@ -1,0 +1,33 @@
+[
+  {
+    "fields": {
+      "Expression": "寝かす",
+      "Reading": "ねかす",
+      "Glossary": "to put to sleep",
+      "Sentence": "泣く赤ちゃん寝かす よい方法とは",
+      "Sentence Translation": "Good ways to put an infant to sleep"
+    },
+    "options": {
+      "allowDuplicate": false
+    },
+    "tags": ["AnkiDojo"],
+    "audio": [
+      {
+        "url": "https://assets.languagepod101.com/dictionary/japanese/audiomp3.php?kanji=寝かす&kana=ねかす",
+        "filename": "AnkiDojo_ねかす_寝かす.mp3",
+        "fields": ["Audio"]
+      }
+    ]
+  },
+  {
+    "fields": {
+      "Expression": "共演",
+      "Reading": "きょうえん",
+      "Glossary": "co-starring"
+    },
+    "options": {
+      "allowDuplicate": false
+    },
+    "tags": ["AnkiDojo"]
+  }
+]

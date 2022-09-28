@@ -22,6 +22,7 @@ export interface Definition {
   audio_urls?: AudioUrl[]; // possible audio urls
   selectedAudioUrl?: string; // user selected audio url
   sentences?: string[];
+  sentence_translations?: string[];
   morph_state?: string; // known or not known
 }
 

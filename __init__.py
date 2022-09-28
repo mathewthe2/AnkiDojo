@@ -33,7 +33,7 @@ if config['dev_mode']:
   # mw.form.menuTools.addAction(action)
 
 WINDOW_DISPLAY = False
-CLIENT_URL = "http://localhost:5008/home.html"
+CLIENT_URL = "http://localhost:5008/apps.html"
 
 class AnkiDojoWebView(AnkiWebView):
     def __init__(self):

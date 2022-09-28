@@ -1,59 +1,82 @@
 import { useEffect, useState } from "react";
-import {
-  useMantineTheme,
-  Group,
-  Modal,
-  Text,
-  NavLink,
-} from "@mantine/core";
+import { useMantineTheme, Group, Modal, Text, NavLink } from "@mantine/core";
 import {
   Dropzone,
-  DropzoneProps,
   MIME_TYPES,
   FileWithPath,
 } from "@mantine/dropzone";
 import CardBuilderPreview from "../cardBuilderPreview";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import createExpressionList from "@/lib/card-builder/createExpressionList";
+import RawNoteAddInterface from "@/interfaces/card_builder/RawNoteAddInterface";
 import { IconUpload, IconX, IconFile } from "@tabler/icons";
+import { rawNotesToExpressionTerms } from "@/lib/card-builder/notes";
 
-function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boolean}) {
+function CardBuilderFile({
+  isVocabularyGeneration,
+}: {
+  isVocabularyGeneration?: boolean;
+}) {
   const theme = useMantineTheme();
   const [files, setFiles] = useState<FileWithPath[]>([]);
   const [dropModalOpened, setDropModalOpened] = useState(false);
-  const [userText, setUserText] = useState('');
+  const [expressionTerms, setExpressionTerms] = useState<ExpressionTerm[]>([]);
+  const [passages, setPassages] = useState<string[]>([]);
   const [previewOpened, setPreviewOpened] = useState(false);
 
   useEffect(() => {
     if (files.length > 0) {
-      console.log(files[0]);
+      // console.log(files[0]);
       handleFile(files[0]);
     }
   }, [files]);
 
   const handleFile = (file: FileWithPath) => {
     switch (file.type) {
-      case "text/plain":
+      case "text/plain": {
         const reader = new FileReader();
         reader.onload = function (e) {
           const content = reader.result as string;
-          setUserText(content);
-          // previewVocabulary(content!.split(/[\r\n]+/));
+          if (isVocabularyGeneration) {
+            setExpressionTerms(createExpressionList(content!.split(/[\r\n]+/)));
+            setPassages([]);
+          } else {
+            setExpressionTerms([]);
+            setPassages([content]);
+          }
           setDropModalOpened(false);
           setPreviewOpened(true);
         };
         reader.readAsText(file);
         break;
+      }
+      case "application/json": {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const content = JSON.parse(reader.result as string);
+          if (content && content.length > 0) {
+            const rawNotes: RawNoteAddInterface[] = content.map(
+              (noteData: any) => {
+                return {
+                  ...noteData,
+                  fields: new Map(Object.entries(noteData.fields)),
+                  options: new Map(Object.entries(noteData.options)),
+                };
+              }
+            );
+            console.log(rawNotesToExpressionTerms(rawNotes))
+            setExpressionTerms(rawNotesToExpressionTerms(rawNotes));
+            setDropModalOpened(false);
+            setPreviewOpened(true);
+          }
+        };
+        reader.readAsText(file);
+        break;
+      }
       default:
         break;
     }
   };
-
-  // const previewVocabulary = (vocabularyItems: string[]) => {
-  //   // setExpressionList(createExpressionList(vocabularyItems));
-  //   setDropModalOpened(false);
-  //   setPreviewOpened(true);
-  // };
 
   return (
     <div>
@@ -73,9 +96,7 @@ function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boole
           onDrop={setFiles}
           onReject={(files) => console.log("rejected files", files)}
           multiple={false}
-          accept={[
-            "text/plain"
-          ]}
+          accept={["text/plain", "application/json"]}
           // accept={[
           //   MIME_TYPES.csv,
           //   "text/tsv",
@@ -115,7 +136,7 @@ function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boole
                 Drag file here or click to select file
               </Text>
               <Text size="sm" color="dimmed" inline mt={7}>
-                *txt
+                *txt, json
               </Text>
             </div>
           </Group>
@@ -128,10 +149,10 @@ function CardBuilderFile({isVocabularyGeneration}:{isVocabularyGeneration?:boole
         withCloseButton={false}
         size="80%"
       >
-       <CardBuilderPreview
-          expressionList={isVocabularyGeneration ? createExpressionList(userText!.split(/[\r\n]+/)) : []}
-          passages={isVocabularyGeneration ? [] : [userText]}
-          onSuccessCallback={()=>setPreviewOpened(false)}
+        <CardBuilderPreview
+          expressionList={expressionTerms}
+          passages={passages}
+          onSuccessCallback={() => setPreviewOpened(false)}
         />
       </Modal>
     </div>

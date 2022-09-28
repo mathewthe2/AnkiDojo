@@ -41,7 +41,7 @@ bp = Blueprint('mine', __name__)
 
 @bp.route('/')
 def index():
-    return redirect("/home.html")
+    return redirect("/apps.html")
     
 @bp.route("/p/<path:path>", methods=('GET',))
 def online_proxy(path):

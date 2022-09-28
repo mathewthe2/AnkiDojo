@@ -1,6 +1,6 @@
 import { NoteMedia } from "./NoteMedia"
 
-export interface NoteAddInterface {
+export default interface NoteAddInterface {
     deckName: string,
     modelName: string,
     fields: Map<string, string>,

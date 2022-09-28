@@ -4,11 +4,11 @@ interface NoteMediaMeta {
   fields: string[];
 }
 
-interface NoteMediaWithUrl extends NoteMediaMeta {
+export interface NoteMediaWithUrl extends NoteMediaMeta {
   url: string;
 }
 
-interface NoteMediaWithData extends NoteMediaMeta {
+export interface NoteMediaWithData extends NoteMediaMeta {
   data: string; // base64
 }
 
