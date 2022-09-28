@@ -86,7 +86,7 @@ class AnkiHelper():
         if model_filter_string:
             query_string += ' ' + model_filter_string
         if deck_name:
-            query_string = 'deck:{} {}'.format(deck_name, query_string)
+            query_string = '"deck:{}" {}'.format(deck_name, query_string)
         if extra_filter:
             query_string += ' ' + extra_filter
         if not enable_suspended:
