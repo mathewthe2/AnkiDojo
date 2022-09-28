@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Anchor,
   Center,
   Skeleton,
   Title,
@@ -25,7 +26,7 @@ import {
   FieldValueType,
 } from "@/lib/anki";
 import { Howl } from "howler";
-import { addNotesToAnki } from "@/lib/card-builder/notes";
+import { addNotesToAnki, hasMecabSupport } from "@/lib/card-builder/notes";
 import { NoteAddInterface } from "@/interfaces/card_builder/NoteAddInterface";
 import { IconVolume, IconX, IconEye, IconEyeOff } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
@@ -69,13 +70,14 @@ const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scrapi
 function CardBuilderPreview({
   expressionList,
   passages,
-  onSuccessCallback
+  onSuccessCallback,
 }: {
   expressionList: ExpressionTerm[];
   passages?: string[];
-  onSuccessCallback?: Function
+  onSuccessCallback?: Function;
 }) {
   const [deckNames, setDeckNames] = useState([]);
+  const [mecabMissing, setMecabMissing] = useState(false);
   const [selectedDeckName, setSelectedDeckName] = useState("");
   const [cardFormatModelName, setCardFormatModelName] = useState("");
   const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
@@ -87,51 +89,68 @@ function CardBuilderPreview({
   );
   const { classes, theme } = useStyles();
 
-  useEffect(() => {
-    getDeckNames().then((deckNames) => setDeckNames(deckNames.sort()));
-    getPrimaryDeck().then((primaryDeck) => setSelectedDeckName(primaryDeck));
-    getCardFormats().then((cardFormats) => {
-      setCardFormats(cardFormats);
-      if (cardFormats.length > 0) {
-        setCardFormatModelName(cardFormats[0].modelName);
-      }
-    });
+  const requiresMecabSupport = async () => {
+    if (passages && passages.length > 0) {
+      const hasMecab = await hasMecabSupport();
+      return !hasMecab;
+    } else {
+      return false;
+    }
+  };
 
-    getTermDefinitions({
-      keywords: expressionList.map(
-        (expression: ExpressionTerm) => expression.userExpression
-      ),
-      passages: passages,
-      include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO,
-    }).then((definitions) => {
-      if (!isLoaded) {
-        const expressionTerms: ExpressionTerm[] = definitions.map(
-          (definition: Definition, index: number) => {
-            if (definition.sentences && definition.sentences.length > 0) {
-              setHasSentences(true);
-            }
-            // add sentences if expression has sentences, eg. kindle vocab
-            const onlyUserExpression =
-              expressionList.length === definitions.length;
-            if (
-              onlyUserExpression &&
-              expressionList[index]?.definition?.sentences?.[0]
-            ) {
-              //
-              definition.sentences = [
-                ...(definition.sentences || []),
-                ...(expressionList[index]?.definition?.sentences || []),
-              ];
-            }
-            return {
-              userExpression: definition.surface || "",
-              definition: definition,
-            };
-          }
-        );
-        setExpressionTerms(expressionTerms);
+  useEffect(() => {
+    requiresMecabSupport().then((requiresMecabSupport) => {
+      setMecabMissing(requiresMecabSupport);
+      if (requiresMecabSupport) {
+        setIsLoaded(true);
+        return;
       }
-      setIsLoaded(true);
+      // no need for mecab and has mecab installed
+      getDeckNames().then((deckNames) => setDeckNames(deckNames.sort()));
+      getPrimaryDeck().then((primaryDeck) => setSelectedDeckName(primaryDeck));
+      getCardFormats().then((cardFormats) => {
+        setCardFormats(cardFormats);
+        if (cardFormats.length > 0) {
+          setCardFormatModelName(cardFormats[0].modelName);
+        }
+      });
+
+      getTermDefinitions({
+        keywords: expressionList.map(
+          (expression: ExpressionTerm) => expression.userExpression
+        ),
+        passages: passages,
+        include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO,
+      }).then((definitions) => {
+        if (!isLoaded) {
+          const expressionTerms: ExpressionTerm[] = definitions.map(
+            (definition: Definition, index: number) => {
+              if (definition.sentences && definition.sentences.length > 0) {
+                setHasSentences(true);
+              }
+              // add sentences if expression has sentences, eg. kindle vocab
+              const onlyUserExpression =
+                expressionList.length === definitions.length;
+              if (
+                onlyUserExpression &&
+                expressionList[index]?.definition?.sentences?.[0]
+              ) {
+                //
+                definition.sentences = [
+                  ...(definition.sentences || []),
+                  ...(expressionList[index]?.definition?.sentences || []),
+                ];
+              }
+              return {
+                userExpression: definition.surface || "",
+                definition: definition,
+              };
+            }
+          );
+          setExpressionTerms(expressionTerms);
+        }
+        setIsLoaded(true);
+      });
     });
   }, []);
 
@@ -336,6 +355,23 @@ function CardBuilderPreview({
 
   if (!isLoaded) {
     return <Skeleton height={400} />;
+  } else if (mecabMissing) {
+    return (
+      <Center>
+        <Text style={{textAlign: 'center'}}>
+          Mecab Support Addon is missing.
+          <br />
+          Please install{" "}
+          <Anchor
+            href="https://github.com/ianki/MecabUnidic/releases/download/v3.1.0/MecabUnidic3.1.0.ankiaddon"
+            target="_blank"
+          >
+            Mecab Support
+          </Anchor>{" "}
+          and relaunch Anki.
+        </Text>
+      </Center>
+    );
   } else if (expressionTerms.length === 0) {
     return <Center>No words added!</Center>;
   }

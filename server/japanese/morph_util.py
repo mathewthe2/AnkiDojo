@@ -53,6 +53,15 @@ class MorphUtil():
                 kana_map[m.lemma] = kaner(m.kanaBase, True)
             return morpheme_map, surface_map, kana_map
 
+    def has_mecab(self):
+        try:
+            p, _ = _mecab()
+        except:
+            return False
+        else:
+            return True
+
+
 # List of features in Unidic 22 format dictionary
 # f[0]:  pos1
 # f[1]:  pos2

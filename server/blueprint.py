@@ -261,6 +261,11 @@ def terms():
                     
     return jsonify(result)
 
+@bp.route("/api/mecab_support")
+def has_mecab_support():
+    language = Japanese()
+    has_mecab = language.morph_util.has_mecab()
+    return jsonify({'has_mecab': has_mecab})
 
 @bp.route("/api/google_lens_url", methods=('POST',))
 def google_lens_url():
