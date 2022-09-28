@@ -30,3 +30,8 @@ next export -o ../server/app
 ```bash
 sh build.sh
 ```
+### Acknowledgements
+- JMDict
+- Yomichan
+- ianki
+- Yomichan Forvo server 
