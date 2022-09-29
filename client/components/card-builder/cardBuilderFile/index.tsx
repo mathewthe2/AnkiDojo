@@ -10,7 +10,8 @@ import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import createExpressionList from "@/lib/card-builder/createExpressionList";
 import RawNoteAddInterface from "@/interfaces/card_builder/RawNoteAddInterface";
 import { IconUpload, IconX, IconFile } from "@tabler/icons";
-import { rawNotesToExpressionTerms } from "@/lib/card-builder/notes";
+import { rawNotesToExpressionTerms, jsonNotesToExpressionTerms } from "@/lib/card-builder/notes";
+import csvtojson from 'csvtojson';
 
 function CardBuilderFile({
   isVocabularyGeneration,
@@ -64,11 +65,27 @@ function CardBuilderFile({
                 };
               }
             );
-            console.log(rawNotesToExpressionTerms(rawNotes))
             setExpressionTerms(rawNotesToExpressionTerms(rawNotes));
             setDropModalOpened(false);
             setPreviewOpened(true);
           }
+        };
+        reader.readAsText(file);
+        break;
+      }
+      case MIME_TYPES.csv: {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const content = reader.result as string;
+          csvtojson()
+          .fromString(content)
+          .then((jsonNotes)=>{ 
+            if (jsonNotes && jsonNotes.length > 0) {
+              setExpressionTerms(jsonNotesToExpressionTerms(jsonNotes));
+              setDropModalOpened(false);
+              setPreviewOpened(true);
+            }
+          })
         };
         reader.readAsText(file);
         break;
@@ -96,13 +113,7 @@ function CardBuilderFile({
           onDrop={setFiles}
           onReject={(files) => console.log("rejected files", files)}
           multiple={false}
-          accept={["text/plain", "application/json"]}
-          // accept={[
-          //   MIME_TYPES.csv,
-          //   "text/tsv",
-          //   "text/plain",
-          //   "application/json",
-          // ]}
+          accept={["text/plain", MIME_TYPES.csv, "application/json"]}
         >
           <Group
             position="center"
@@ -136,7 +147,7 @@ function CardBuilderFile({
                 Drag file here or click to select file
               </Text>
               <Text size="sm" color="dimmed" inline mt={7}>
-                *txt, json
+                *txt, csv, json
               </Text>
             </div>
           </Group>

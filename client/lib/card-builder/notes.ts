@@ -43,6 +43,33 @@ export const addNotesToAnki = async (notesToAdd: NoteAddInterface[]) => {
   }
 };
 
+export const jsonNotesToExpressionTerms = (jsonNotes: any) => {
+  const expressionTerms: ExpressionTerm[] = jsonNotes.map((jsonNote: any) => {
+    return {
+      userExpression: jsonNote[FieldValueType.Expression] || "",
+      definition: {
+        expression: jsonNote[FieldValueType.Expression] || "",
+        reading: jsonNote[FieldValueType.Reading] || "",
+        glossary:
+          jsonNote[FieldValueType.Glossary] ||
+          jsonNote[FieldValueType.GlossaryBrief] ||
+          "",
+        sentences: jsonNote[FieldValueType.Sentence]
+          ? [jsonNote[FieldValueType.Sentence]]
+          : [],
+        sentence_translations: jsonNote[FieldValueType.SentenceTranslation]
+          ? [jsonNote[FieldValueType.SentenceTranslation]]
+          : [],
+        audio_urls: jsonNote[FieldValueType.Audio]
+          ? [jsonNote[FieldValueType.Audio]]
+          : [],
+        tags: jsonNote["tags"] || [],
+      },
+    } as ExpressionTerm;
+  });
+  return expressionTerms;
+};
+
 export const rawNotesToExpressionTerms = (rawNotes: RawNoteAddInterface[]) => {
   const expressionTerms: ExpressionTerm[] = rawNotes.map(
     (rawTerm: RawNoteAddInterface) => {
