@@ -151,7 +151,8 @@ def _spawnMecab(base_cmd, startupinfo):
 
     args = ['--node-format=%s\r' % ('\t'.join(node_parts),),
             '--unk-format=%s\r' % ('\t'.join(unk_parts),),
-            '--eos-format=EOS\n'
+            '--eos-format=EOS\n',
+            '-b 819200' # max buffer size for mecab
             ]
     return spawnCmd(base_cmd + args, startupinfo)
 
