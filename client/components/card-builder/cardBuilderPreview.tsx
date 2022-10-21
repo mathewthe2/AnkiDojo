@@ -66,6 +66,8 @@ const useStyles = createStyles((theme) => ({
 }));
 
 const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
+const EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE = ['sentences', 'sentence_translations']
+const EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP = ['expression', 'glossary', 'selectedGlossary', 'reading']
 
 function CardBuilderPreview({
   expressionList,
@@ -120,7 +122,7 @@ function CardBuilderPreview({
           (expression: ExpressionTerm) => expression.userExpression
         ),
         passages: passages,
-        include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO,
+        include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO ? false : undefined
       }).then((definitions) => {
         if (!isLoaded) {
           const expressionTerms: ExpressionTerm[] = definitions.map(
@@ -128,6 +130,17 @@ function CardBuilderPreview({
               // add sentences if expression has sentences, eg. import json / kindle vocab
               const onlyUserExpression =
                 expressionList.length === definitions.length;
+
+              const useExistingIfNotEmpty = <U extends keyof Definition>(dictionaryKey:U) => {
+                if (onlyUserExpression && expressionList[index]?.definition?.[dictionaryKey]) {
+                  const val = expressionList[index]?.definition?.[dictionaryKey];
+                  const isValidString = (typeof(val) === 'string' && val.length > 0);
+                  const isValidArray = (Array.isArray(val) && val.length > 0);
+                  if (isValidString || isValidArray) {
+                    definition[dictionaryKey] = expressionList[index]?.definition?.[dictionaryKey];
+                  }
+                }
+              }
 
               const combineExistingArrays = <U extends keyof Definition>(dictionaryKey:U) => {
                 if (onlyUserExpression && expressionList[index]?.definition?.[dictionaryKey]?.[0]) {
@@ -137,8 +150,17 @@ function CardBuilderPreview({
                     ] as Definition[U];
                 }
               }
-              combineExistingArrays('sentences');
-              combineExistingArrays('sentence_translations');
+
+              EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP.forEach((key:string)=> {
+                useExistingIfNotEmpty(key as keyof Definition)
+              });
+              
+              EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE.forEach((key:string)=> {
+                combineExistingArrays(key as keyof Definition);
+              });
+
+              console.log('gloss', definition?.selectedGlossary)
+
               if (definition.sentences && definition.sentences.length > 0) {
                 setHasSentences(true);
               }
@@ -323,6 +345,9 @@ function CardBuilderPreview({
   const isTermKnown = (term: ExpressionTerm) =>
     term.definition?.morph_state === MorphState.KNOWN;
 
+  const hasAudioUrls = (term: ExpressionTerm) =>
+    term.definition?.audio_urls != null && term.definition?.audio_urls.length > 0;
+
   const toggleKnownVocab = (index: number) => {
     const morphState = isTermKnown(expressionTerms[index])
       ? ""
@@ -412,6 +437,7 @@ function CardBuilderPreview({
           <tbody>
             {expressionTerms.map((expressionTerm, index) => {
               const isKnownVocab = isTermKnown(expressionTerm);
+              const hasAudio = hasAudioUrls(expressionTerm);
               return (
                 <tr
                   key={`expression_${index}`}
@@ -424,6 +450,7 @@ function CardBuilderPreview({
                   }}
                 >
                   <td style={{ maxWidth: 20 }}>
+                    {hasAudio &&
                     <Menu
                       trigger="hover"
                       openDelay={400}
@@ -492,6 +519,7 @@ function CardBuilderPreview({
                         )}
                       </Menu.Dropdown>
                     </Menu>
+            }
                   </td>
                   <td
                     suppressContentEditableWarning

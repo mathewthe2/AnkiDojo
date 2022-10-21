@@ -78,6 +78,16 @@ class AnkiHelper():
     def update_enable_suspended(self, enable_suspended):
         return self.settings.update_settings_data({'enable_suspended': enable_suspended})
 
+    def get_enable_word_audio_search(self):
+        anki_settings = self.settings.settings_data
+        if "enable_word_audio_search" in anki_settings:
+            return anki_settings["enable_word_audio_search"]
+        else:
+            return False
+    
+    def update_enable_word_audio_search(self, enable_word_audio_search):
+        return self.settings.update_settings_data({'enable_word_audio_search': enable_word_audio_search})
+
     def search_notes(self, keyword, deck_name='', extra_filter='', shuffle=False, offset=0, limit=10):
         models = self.settings.get_models()
         model_filter_string = '({})'.format(' OR '.join(['"note:{}"'.format(model) for model in models])) if models else ''

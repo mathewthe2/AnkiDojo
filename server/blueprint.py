@@ -125,6 +125,18 @@ def anki_enable_suspended():
             result = ankiHelper.update_enable_suspended(content["enable_suspended"])
         return jsonify(result)
 
+@bp.route("/api/enable_word_audio_search", methods=('GET', 'POST'))
+def card_builder_enable_word_audio_search():
+    if request.method == 'GET':
+        enable_word_audio_search = ankiHelper.get_enable_word_audio_search()
+        return jsonify(enable_word_audio_search)
+    result = None
+    content = request.get_json()
+    if request.method == "POST":
+        if content and "enable_word_audio_search" in content:
+            result = ankiHelper.update_enable_word_audio_search(content["enable_word_audio_search"])
+        return jsonify(result)
+
 @bp.route("/api/fields")
 @bp.route("/api/fields/<string:model_name>")
 def get_fields(model_name=None):
@@ -235,7 +247,11 @@ def terms():
                                 result[i]['pitch_svg'] = pitch_graph_result
                                 break
 
-        include_audio_urls = bool_param(content, "include_audio_urls")
+        include_audio_urls = False
+        if "include_audio_urls" in content:
+            include_audio_urls = bool_param(content, "include_audio_urls")
+        else:
+            include_audio_urls = ankiHelper.get_enable_word_audio_search()
         if include_audio_urls:
             if current_app.config['DEV_MODE']:
                 from .data_generator import DataGenerator

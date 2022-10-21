@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Button,
+  Drawer,
   Modal,
   Group,
   Title,
@@ -19,9 +20,11 @@ const mockPassageData = "お腹減ったから、コンビニで食べ物を買�
 import createExpressionList from "@/lib/card-builder/createExpressionList";
 import { IconSettings } from "@tabler/icons";
 import { toHiragana } from "wanakana";
+import CardBuilderSettings from "./cardBuilderSettings";
 
 function CardBuilderForm() {
   const [opened, setOpened] = useState(false);
+  const [settingsOpened, setSettingsOpened] = useState(false);
   const [userText, setUserText] = useState("");
   const [activeTab, setActiveTab] = useState<string | null>("vocabulary");
 
@@ -105,7 +108,7 @@ function CardBuilderForm() {
               : []
           }
           passages={isVocabularyGeneration() ? [] : [userText]}
-          onSuccessCallback={()=>setOpened(false)}
+          onSuccessCallback={() => setOpened(false)}
         />
       </Modal>
       <Grid>
@@ -118,9 +121,19 @@ function CardBuilderForm() {
             >
               Generate
             </Button>
-            <ActionIcon color="dark">
+            <ActionIcon onClick={() => setSettingsOpened(true)}>
               <IconSettings />
             </ActionIcon>
+            <Drawer
+              opened={settingsOpened}
+              onClose={() => setSettingsOpened(false)}
+              title="Card Builder Setting"
+              padding="xl"
+              size="xl"
+              position="right"
+            >
+              <CardBuilderSettings />
+            </Drawer>
           </Group>
         </Grid.Col>
         <Grid.Col span={2}></Grid.Col>

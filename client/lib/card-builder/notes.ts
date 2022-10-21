@@ -45,15 +45,15 @@ export const addNotesToAnki = async (notesToAdd: NoteAddInterface[]) => {
 
 export const jsonNotesToExpressionTerms = (jsonNotes: any) => {
   const expressionTerms: ExpressionTerm[] = jsonNotes.map((jsonNote: any) => {
+    const glossary = jsonNote[FieldValueType.Glossary] ||
+    jsonNote[FieldValueType.GlossaryBrief] || undefined;
     return {
       userExpression: jsonNote[FieldValueType.Expression] || "",
       definition: {
         expression: jsonNote[FieldValueType.Expression] || "",
         reading: jsonNote[FieldValueType.Reading] || "",
-        glossary:
-          jsonNote[FieldValueType.Glossary] ||
-          jsonNote[FieldValueType.GlossaryBrief] ||
-          "",
+        selectedGlossary: glossary || '',
+        glossary: glossary ? [glossary] : [],
         sentences: jsonNote[FieldValueType.Sentence]
           ? [jsonNote[FieldValueType.Sentence]]
           : [],

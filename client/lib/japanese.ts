@@ -39,5 +39,5 @@ export const getTermDefinitions = async ({
     passages: passages || [],
     keywords: keywords,
     include_pitch_graph: true,
-    include_audio_urls: include_audio_urls || true,
+    include_audio_urls: include_audio_urls,
   });

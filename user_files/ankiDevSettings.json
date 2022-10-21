@@ -29,6 +29,7 @@
             "Expression": "Sentence"
         }
     },
-    "primary_deck": "Japanese",
-    "enable_suspended": true
+    "primary_deck": "Japanese Demo",
+    "enable_suspended": true,
+    "enable_word_audio_search": false
 }

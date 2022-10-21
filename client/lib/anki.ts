@@ -49,6 +49,10 @@ const getEnableSuspended = async () => await fetchAnki(AnkiSettingType.EnableSus
   const setEnableSuspended = async (enableSuspended: boolean) =>
     await postAnki(AnkiSettingType.EnableSuspended, {enable_suspended: enableSuspended });
 
+const getEnableWordAudioSearch= async () => await fetchAnki(AnkiSettingType.EnableWordAudioSearch);
+    const setEnableWordAudioSearch = async (enableWordAudioSearch: boolean) =>
+      await postAnki(AnkiSettingType.EnableWordAudioSearch, {enable_word_audio_search: enableWordAudioSearch });
+      
 const getCardFormats = async (): Promise<AnkiCardFormat[]> => {
   const data = await fetchAnki(AnkiSettingType.CardFormat);
   return data.map((cardFormat: any) => {
@@ -94,7 +98,8 @@ enum AnkiSettingType {
   Field = "fields",
   Model = "models",
   PrimaryDeck = "primary_deck",
-  EnableSuspended = "enable_suspended"
+  EnableSuspended = "enable_suspended",
+  EnableWordAudioSearch = "enable_word_audio_search"
 }
 
 export {
@@ -103,9 +108,11 @@ export {
   getModelFields,
   getPrimaryDeck,
   getEnableSuspended,
+  getEnableWordAudioSearch,
   getCardFormats,
   setPrimaryDeck,
   setEnableSuspended,
+  setEnableWordAudioSearch,
   fieldValueOptions,
   AnkiSettingType,
   FieldValueType,
