@@ -66,8 +66,16 @@ const useStyles = createStyles((theme) => ({
 }));
 
 const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
-const EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE = ['sentences', 'sentence_translations']
-const EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP = ['expression', 'glossary', 'selectedGlossary', 'reading']
+const EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE = [
+  "sentences",
+  "sentence_translations",
+];
+const EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP = [
+  "expression",
+  "glossary",
+  "selectedGlossary",
+  "reading",
+];
 
 function CardBuilderPreview({
   expressionList,
@@ -122,7 +130,8 @@ function CardBuilderPreview({
           (expression: ExpressionTerm) => expression.userExpression
         ),
         passages: passages,
-        include_audio_urls: expressionList.length > VOCAB_LIMIT_FOR_AUDIO ? false : undefined
+        include_audio_urls:
+          expressionList.length > VOCAB_LIMIT_FOR_AUDIO ? false : undefined,
       }).then((definitions) => {
         if (!isLoaded) {
           const expressionTerms: ExpressionTerm[] = definitions.map(
@@ -131,41 +140,59 @@ function CardBuilderPreview({
               const onlyUserExpression =
                 expressionList.length === definitions.length;
 
-              const useExistingIfNotEmpty = <U extends keyof Definition>(dictionaryKey:U) => {
-                if (onlyUserExpression && expressionList[index]?.definition?.[dictionaryKey]) {
-                  const val = expressionList[index]?.definition?.[dictionaryKey];
-                  const isValidString = (typeof(val) === 'string' && val.length > 0);
-                  const isValidArray = (Array.isArray(val) && val.length > 0);
+              const useExistingIfNotEmpty = <U extends keyof Definition>(
+                dictionaryKey: U
+              ) => {
+                if (
+                  onlyUserExpression &&
+                  expressionList[index]?.definition?.[dictionaryKey]
+                ) {
+                  const val =
+                    expressionList[index]?.definition?.[dictionaryKey];
+                  const isValidString =
+                    typeof val === "string" && val.length > 0;
+                  const isValidArray = Array.isArray(val) && val.length > 0;
                   if (isValidString || isValidArray) {
-                    definition[dictionaryKey] = expressionList[index]?.definition?.[dictionaryKey];
+                    definition[dictionaryKey] =
+                      expressionList[index]?.definition?.[dictionaryKey];
                   }
                 }
-              }
+              };
 
-              const combineExistingArrays = <U extends keyof Definition>(dictionaryKey:U) => {
-                if (onlyUserExpression && expressionList[index]?.definition?.[dictionaryKey]?.[0]) {
+              const combineExistingArrays = <U extends keyof Definition>(
+                dictionaryKey: U
+              ) => {
+                if (
+                  onlyUserExpression &&
+                  expressionList[index]?.definition?.[dictionaryKey]?.[0]
+                ) {
                   definition[dictionaryKey] = [
-                      ...(definition[dictionaryKey] as string[] || []),
-                      ...(expressionList[index]?.definition?.[dictionaryKey] as string[] || []),
-                    ] as Definition[U];
+                    ...((definition[dictionaryKey] as string[]) || []),
+                    ...((expressionList[index]?.definition?.[
+                      dictionaryKey
+                    ] as string[]) || []),
+                  ] as Definition[U];
                 }
-              }
+              };
 
-              EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP.forEach((key:string)=> {
-                useExistingIfNotEmpty(key as keyof Definition)
+              EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP.forEach((key: string) => {
+                useExistingIfNotEmpty(key as keyof Definition);
               });
-              
-              EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE.forEach((key:string)=> {
+
+              EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE.forEach((key: string) => {
                 combineExistingArrays(key as keyof Definition);
               });
 
-              console.log('gloss', definition?.selectedGlossary)
+              console.log("gloss", definition?.selectedGlossary);
 
               if (definition.sentences && definition.sentences.length > 0) {
                 setHasSentences(true);
               }
               if (expressionList[index]?.definition?.audio_urls?.[0]) {
-                definition.audio_urls = [...expressionList[index]?.definition?.audio_urls || [], ...definition.audio_urls || []];
+                definition.audio_urls = [
+                  ...(expressionList[index]?.definition?.audio_urls || []),
+                  ...(definition.audio_urls || []),
+                ];
               }
               return {
                 userExpression: definition.surface || "",
@@ -299,6 +326,14 @@ function CardBuilderPreview({
                   ""
               );
               break;
+            case FieldValueType.GlossaryBrief: // TODO: use brief glossary if available
+              fieldMap.set(
+                key,
+                expressionTerm.definition?.selectedGlossary ||
+                  expressionTerm.definition?.glossary?.[0] ||
+                  ""
+              );
+              break;
             case FieldValueType.PitchAccent:
               fieldMap.set(
                 key,
@@ -346,7 +381,8 @@ function CardBuilderPreview({
     term.definition?.morph_state === MorphState.KNOWN;
 
   const hasAudioUrls = (term: ExpressionTerm) =>
-    term.definition?.audio_urls != null && term.definition?.audio_urls.length > 0;
+    term.definition?.audio_urls != null &&
+    term.definition?.audio_urls.length > 0;
 
   const toggleKnownVocab = (index: number) => {
     const morphState = isTermKnown(expressionTerms[index])
@@ -450,76 +486,77 @@ function CardBuilderPreview({
                   }}
                 >
                   <td style={{ maxWidth: 20 }}>
-                    {hasAudio &&
-                    <Menu
-                      trigger="hover"
-                      openDelay={400}
-                      closeDelay={400}
-                      withinPortal
-                    >
-                      <Menu.Target>
-                        <ActionIcon
-                          variant="transparent"
-                          onClick={() =>
-                            playWordAudio(
-                              expressionTerm.definition?.selectedAudioUrl ||
-                                expressionTerm.definition?.audio_urls?.[0]
-                                  .url ||
-                                ""
-                            )
-                          }
-                        >
-                          <IconVolume size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown
-                        style={{
-                          background:
-                            theme.colorScheme === "dark"
-                              ? theme.colors.dark[7]
-                              : "white",
-                        }}
+                    {hasAudio && (
+                      <Menu
+                        trigger="hover"
+                        openDelay={400}
+                        closeDelay={400}
+                        withinPortal
                       >
-                        <Menu.Label>Sources</Menu.Label>
-                        {expressionTerm.definition?.audio_urls?.map(
-                          (audioUrl: AudioUrl, audioIndex: number) => (
-                            <NavLink
-                              key={`audiolink_${audioIndex}`}
-                              onClick={() => {
-                                playWordAudio(audioUrl.url);
-                                updateTextOfTermDefinitions(
-                                  index,
-                                  FieldValueType.Audio,
-                                  audioUrl.url
-                                );
-                              }}
-                              color="pink"
-                              variant="light"
-                              label={audioUrl.name}
-                              rightSection={
-                                <Loader
-                                  size="xs"
-                                  style={{
-                                    visibility: streamingAudioUrls.has(
-                                      audioUrl.url
-                                    )
-                                      ? "visible"
-                                      : "hidden",
-                                  }}
-                                />
-                              }
-                              active={
-                                expressionTerm.definition?.selectedAudioUrl
-                                  ? audioUrl.url ===
-                                    expressionTerm.definition?.selectedAudioUrl
-                                  : audioIndex === 0
-                              }
-                            />
-                          )
-                        )}
-                      </Menu.Dropdown>
-                    </Menu>
-            }
+                        <Menu.Target>
+                          <ActionIcon
+                            variant="transparent"
+                            onClick={() =>
+                              playWordAudio(
+                                expressionTerm.definition?.selectedAudioUrl ||
+                                  expressionTerm.definition?.audio_urls?.[0]
+                                    .url ||
+                                  ""
+                              )
+                            }
+                          >
+                            <IconVolume size={16} />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown
+                          style={{
+                            background:
+                              theme.colorScheme === "dark"
+                                ? theme.colors.dark[7]
+                                : "white",
+                          }}
+                        >
+                          <Menu.Label>Sources</Menu.Label>
+                          {expressionTerm.definition?.audio_urls?.map(
+                            (audioUrl: AudioUrl, audioIndex: number) => (
+                              <NavLink
+                                key={`audiolink_${audioIndex}`}
+                                onClick={() => {
+                                  playWordAudio(audioUrl.url);
+                                  updateTextOfTermDefinitions(
+                                    index,
+                                    FieldValueType.Audio,
+                                    audioUrl.url
+                                  );
+                                }}
+                                color="pink"
+                                variant="light"
+                                label={audioUrl.name}
+                                rightSection={
+                                  <Loader
+                                    size="xs"
+                                    style={{
+                                      visibility: streamingAudioUrls.has(
+                                        audioUrl.url
+                                      )
+                                        ? "visible"
+                                        : "hidden",
+                                    }}
+                                  />
+                                }
+                                active={
+                                  expressionTerm.definition?.selectedAudioUrl
+                                    ? audioUrl.url ===
+                                      expressionTerm.definition
+                                        ?.selectedAudioUrl
+                                    : audioIndex === 0
+                                }
+                              />
+                            )
+                          )}
+                        </Menu.Dropdown>
+                      </Menu>
+                    )}
                   </td>
                   <td
                     suppressContentEditableWarning
@@ -658,7 +695,7 @@ function CardBuilderPreview({
                       </Highlight>
                       {expressionTerm.definition
                         ?.sentence_translations?.[0] && (
-                        <Text style={{fontStyle: 'italic'}}>
+                        <Text style={{ fontStyle: "italic" }}>
                           {expressionTerm.definition.sentence_translations[0]}
                         </Text>
                       )}
