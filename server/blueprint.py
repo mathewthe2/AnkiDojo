@@ -253,27 +253,21 @@ def terms():
         else:
             include_audio_urls = ankiHelper.get_enable_word_audio_search()
         if include_audio_urls:
-            if current_app.config['DEV_MODE']:
-                from .data_generator import DataGenerator
-                dg = DataGenerator()
-                for i in range(0, len(result)):
-                    result[i]['audio_urls'] = dg.generate_audio_urls()
-            else:
-                with ThreadPoolExecutor(max_workers=5) as executor:
-                    future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
-                    for future in as_completed(future_to_audio):
-                        audio_source = future_to_audio[future]
-                        try:
-                            audio_result = future.result()
-                        except Exception as exc:
-                            print('%r generated an exception: %s' % (audio_source, exc))
-                        else:
-                            for i in range(0, len(result)):
-                                if 'audio_urls' in result[i]:
-                                    continue
-                                if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
-                                    result[i]['audio_urls'] = audio_result
-                                    break
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
+                for future in as_completed(future_to_audio):
+                    audio_source = future_to_audio[future]
+                    try:
+                        audio_result = future.result()
+                    except Exception as exc:
+                        print('%r generated an exception: %s' % (audio_source, exc))
+                    else:
+                        for i in range(0, len(result)):
+                            if 'audio_urls' in result[i]:
+                                continue
+                            if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
+                                result[i]['audio_urls'] = audio_result
+                                break
                     
     return jsonify(result)
 
