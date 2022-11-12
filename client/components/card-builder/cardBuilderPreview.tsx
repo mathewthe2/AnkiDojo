@@ -18,7 +18,7 @@ import {
   Highlight,
   Loader,
 } from "@mantine/core";
-import { getTermDefinitions } from "@/lib/japanese";
+import { getExpressionForAnki, getGlossaryBriefForAnki, getGlossaryForAnki, getSentenceForAnki, getSentenceTranslationForAnki, getTermDefinitions } from "@/lib/japanese";
 import {
   getDeckNames,
   getPrimaryDeck,
@@ -183,7 +183,7 @@ function CardBuilderPreview({
                 combineExistingArrays(key as keyof Definition);
               });
 
-              console.log("gloss", definition?.selectedGlossary);
+              // console.log("gloss", definition?.selectedGlossary);
 
               if (definition.sentences && definition.sentences.length > 0) {
                 setHasSentences(true);
@@ -310,9 +310,7 @@ function CardBuilderPreview({
             case FieldValueType.Expression:
               fieldMap.set(
                 key,
-                expressionTerm.definition?.expression ||
-                  expressionTerm.definition?.surface ||
-                  ""
+                getExpressionForAnki(expressionTerm.definition)
               );
               break;
             case FieldValueType.Reading:
@@ -321,17 +319,13 @@ function CardBuilderPreview({
             case FieldValueType.Glossary:
               fieldMap.set(
                 key,
-                expressionTerm.definition?.selectedGlossary ||
-                  expressionTerm.definition?.glossary?.[0] ||
-                  ""
+                getGlossaryForAnki(expressionTerm?.definition)
               );
               break;
-            case FieldValueType.GlossaryBrief: // TODO: use brief glossary if available
+            case FieldValueType.GlossaryBrief:
               fieldMap.set(
                 key,
-                expressionTerm.definition?.selectedGlossary ||
-                  expressionTerm.definition?.glossary?.[0] ||
-                  ""
+                getGlossaryBriefForAnki(expressionTerm?.definition)
               );
               break;
             case FieldValueType.PitchAccent:
@@ -343,13 +337,13 @@ function CardBuilderPreview({
             case FieldValueType.Sentence:
               fieldMap.set(
                 key,
-                expressionTerm.definition?.sentences?.[0] || ""
+                getSentenceForAnki(expressionTerm?.definition)
               );
               break;
             case FieldValueType.SentenceTranslation:
               fieldMap.set(
                 key,
-                expressionTerm.definition?.sentence_translations?.[0] || ""
+                getSentenceTranslationForAnki(expressionTerm?.definition)
               );
               break;
             case FieldValueType.Audio:
