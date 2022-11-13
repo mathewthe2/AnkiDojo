@@ -35,6 +35,8 @@ import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import { NoteMedia } from "@/interfaces/card_builder/NoteMedia";
 import { AudioUrl, Definition } from "@/lib/japanese";
 import { MorphState, addMorphs, removeMorphs } from "@/lib/morphs";
+import CardBuilderResult from "./cardBuilderResult";
+import NoteResult from "@/interfaces/card_builder/NoteResultInterface";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -88,6 +90,9 @@ function CardBuilderPreview({
 }) {
   const [deckNames, setDeckNames] = useState([]);
   const [mecabMissing, setMecabMissing] = useState(false);
+  const [hasResult, setHasResult] = useState(false);
+  const [noteResults, setNoteResults] = useState<NoteResult[]>([]);
+  const [noteResultExpressionKey, setNoteResultExpressionKey] = useState("");
   const [selectedDeckName, setSelectedDeckName] = useState("");
   const [cardFormatModelName, setCardFormatModelName] = useState("");
   const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
@@ -294,10 +299,11 @@ function CardBuilderPreview({
     sound.play();
   };
 
-  const bulkAddToAnki = () => {
+  const bulkAddToAnki = async() => {
     const modelMap = cardFormats.find(
       (cardFormat) => cardFormat.modelName === cardFormatModelName
     )?.modelMap;
+    let expressionKey = '';
     // map fields to corresponding names in card format
     const fieldMaps: Map<string, string>[] = [];
     const audioList: NoteMedia[] = [];
@@ -312,6 +318,7 @@ function CardBuilderPreview({
                 key,
                 getExpressionForAnki(expressionTerm.definition)
               );
+              expressionKey = key;
               break;
             case FieldValueType.Reading:
               fieldMap.set(key, expressionTerm.definition?.reading || "");
@@ -365,10 +372,13 @@ function CardBuilderPreview({
         tags: [],
       };
     });
-    addNotesToAnki(notesToAdd);
-    if (onSuccessCallback) {
-      onSuccessCallback();
-    }
+    const addNotesResult = await addNotesToAnki(notesToAdd);
+    setNoteResults(addNotesResult || []);
+    setNoteResultExpressionKey(expressionKey);
+    setHasResult(true);
+    // if (onSuccessCallback) {
+    //   onSuccessCallback();
+    // }
   };
 
   const isTermKnown = (term: ExpressionTerm) =>
@@ -439,6 +449,10 @@ function CardBuilderPreview({
     );
   } else if (expressionTerms.length === 0) {
     return <Center>No words added!</Center>;
+  }
+
+  if (hasResult) {
+    return <CardBuilderResult noteResults={noteResults} expressionKey={noteResultExpressionKey} onSuccessCallback={onSuccessCallback} />
   }
 
   return (

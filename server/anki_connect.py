@@ -22,7 +22,7 @@ class AnkiConnect():
         collection.autosave()
         self.stopEditing()
 
-        return ankiNote.id
+        return ankiNote
 
     def media(self):
         media = self.collection().media

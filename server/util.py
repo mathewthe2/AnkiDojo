@@ -157,18 +157,31 @@ class AnkiHelper():
 
     def add_notes(self, notes):
         notes = self.add_options_to_notes(notes)
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            future_to_note_id = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
-            for future in as_completed(future_to_note_id):
-                note_id = future_to_note_id[future]
-                try:
-                    note_id_result = future.result()
-                except Exception as exc:
-                    print('%r generated an exception: %s' % (note_id, exc))
-                else:
-                    pass
-        # for note in notes:
-        #     self.ankiConnect.addNote(note)
+        result = []
+        for note in notes:
+            created_note_result = self.ankiConnect.addNote(note)
+            result.append({
+                "id": created_note_result.id,
+                "fields": {key: value for key, value in created_note_result.items()}
+            })
+        # with ThreadPoolExecutor(max_workers=4) as executor:
+        #     future_to_created_note = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
+        #     for future in as_completed(future_to_created_note):
+        #         created_note = future_to_created_note[future]
+        #         try:
+        #             created_note_result = future.result()
+        #             result.append({
+        #                 "id": created_note_result.id,
+        #                 "fields": {key: value for key, value in created_note_result.items()}
+        #                 })
+        #             # auto_add_to_known = self.get_anki_settings("auto_add_to_known")
+        #             # self.add_morphs(content["morphs"], content["state"])
+        #         except Exception as exc:
+        #             print('%r generated an exception: %s' % (created_note, exc))
+        #             return ["exception:", '%r generated an exception: %s' % (created_note, exc)]
+        #         else:
+        #             pass
+        return result
 
     def get_known_morphs(self):
         return self.morph_settings.get_known_morphs()

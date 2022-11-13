@@ -3,6 +3,7 @@ import NoteAddInterface from "@/interfaces/card_builder/NoteAddInterface";
 import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import RawNoteAddInterface from "@/interfaces/card_builder/RawNoteAddInterface";
 import { FieldValueType } from "../anki";
+import NoteResult from "@/interfaces/card_builder/NoteResultInterface";
 
 export const hasMecabSupport = async () => {
   const result = await fetchAnki("mecab_support");
@@ -33,7 +34,14 @@ export const addNotesToAnki = async (notesToAdd: NoteAddInterface[]) => {
   });
   try {
     const content = await response.json();
-    return content;
+    const noteResult: NoteResult[] = content.map(
+      (noteResult: any) => {
+        return {
+          ...noteResult,
+          fields: new Map(Object.entries(noteResult.fields)),
+        };
+      });
+    return noteResult;
   } catch (e) {
     console.warn(e);
   }
