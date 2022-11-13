@@ -20,7 +20,7 @@ function CardBuilderResult({
   return (
     <>
       <Center>
-        <Text weight={700}>Added!</Text>
+        <Text weight={700}>Added {noteResults.length} card{noteResults.length > 1 && 's'}</Text>
       </Center>
       <ScrollArea.Autosize maxHeight={500} style={{ width: "100%" }} mx="auto">
         {noteResults.map((noteResult) => (
