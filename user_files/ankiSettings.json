@@ -2,5 +2,6 @@
     "model_maps": {},
     "primary_deck": "",
     "enable_suspended": true,
-    "enable_word_audio_search": false
+    "enable_word_audio_search": false,
+    "allow_duplicate": false
 }
