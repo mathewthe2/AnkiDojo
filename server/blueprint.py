@@ -2,6 +2,7 @@ import requests
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from .config import config
+from .anki_config import DEFAULT_ANKI_SETTINGS
 from .util import AnkiHelper
 from .user_apps import UserApps
 from .japanese import Japanese
@@ -99,6 +100,7 @@ def card_formats():
             result = ankiHelper.update_model_map(content["model_name"], {})
         return jsonify(result)
 
+# DEPRECATED - to remove
 @bp.route("/api/primary_deck", methods=('GET', 'POST', 'DELETE'))
 def anki_primary_deck():
     if request.method == 'GET':
@@ -113,29 +115,23 @@ def anki_primary_deck():
     if request.method == "DELETE":
         return jsonify({}) 
 
-@bp.route("/api/enable_suspended", methods=('GET', 'POST'))
-def anki_enable_suspended():
+@bp.route("/api/anki_settings", methods=('GET', 'POST'))
+@bp.route("/api/anki_settings/<string:key>", methods=('GET', 'POST'))
+def anki_settings(key=None):
+    has_valid_key = key in DEFAULT_ANKI_SETTINGS.keys()
     if request.method == 'GET':
-        enable_suspended = ankiHelper.get_enable_suspended()
-        return jsonify(enable_suspended)
+        if has_valid_key:
+            value = ankiHelper.get_anki_settings(key)
+            return jsonify(value)
+
     result = None
-    content = request.get_json()
     if request.method == "POST":
-        if content and "enable_suspended" in content:
-            result = ankiHelper.update_enable_suspended(content["enable_suspended"])
+        content = request.get_json()
+        if has_valid_key and content and "value" in content:
+            result = ankiHelper.update_anki_settings(key, content["value"])
         return jsonify(result)
 
-@bp.route("/api/enable_word_audio_search", methods=('GET', 'POST'))
-def card_builder_enable_word_audio_search():
-    if request.method == 'GET':
-        enable_word_audio_search = ankiHelper.get_enable_word_audio_search()
-        return jsonify(enable_word_audio_search)
-    result = None
-    content = request.get_json()
-    if request.method == "POST":
-        if content and "enable_word_audio_search" in content:
-            result = ankiHelper.update_enable_word_audio_search(content["enable_word_audio_search"])
-        return jsonify(result)
+    return jsonify({"error": "Invalid key or value"})
 
 @bp.route("/api/fields")
 @bp.route("/api/fields/<string:model_name>")
@@ -251,7 +247,7 @@ def terms():
         if "include_audio_urls" in content:
             include_audio_urls = bool_param(content, "include_audio_urls")
         else:
-            include_audio_urls = ankiHelper.get_enable_word_audio_search()
+            include_audio_urls = ankiHelper.get_anki_settings("enable_word_audio_search")
         if include_audio_urls:
             with ThreadPoolExecutor(max_workers=5) as executor:
                 future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}

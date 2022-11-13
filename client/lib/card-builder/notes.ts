@@ -4,10 +4,6 @@ import ExpressionTerm from "@/interfaces/card_builder/ExpressionTerm";
 import RawNoteAddInterface from "@/interfaces/card_builder/RawNoteAddInterface";
 import { FieldValueType } from "../anki";
 
-const ADD_NOTE_OPTIONS = {
-  allowDuplicate: true,
-};
-
 export const hasMecabSupport = async () => {
   const result = await fetchAnki("mecab_support");
   if (result["has_mecab"]) {
@@ -23,7 +19,7 @@ export const addNotesToAnki = async (notesToAdd: NoteAddInterface[]) => {
       return {
         ...note,
         fields: Object.fromEntries(note.fields),
-        options: ADD_NOTE_OPTIONS,
+        options: {},
       };
     }),
   };

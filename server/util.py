@@ -3,6 +3,7 @@ import os
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 import random
+from .anki_config import DEFAULT_ANKI_SETTINGS
 from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
 
@@ -68,22 +69,16 @@ class AnkiHelper():
     def update_primary_deck(self, primary_deck):
         return self.settings.update_settings_data({'primary_deck': primary_deck})
 
-    def get_enable_suspended(self):
+    def get_anki_settings(self, key):
         anki_settings = self.settings.settings_data
-        if "enable_suspended" in anki_settings:
-            return anki_settings["enable_suspended"]
-        else:
-            return True
-    
-    def update_enable_suspended(self, enable_suspended):
-        return self.settings.update_settings_data({'enable_suspended': enable_suspended})
+        if key in anki_settings:
+            return anki_settings[key]
+        elif key in DEFAULT_ANKI_SETTINGS:
+            return DEFAULT_ANKI_SETTINGS[key]
+        return None
 
-    def get_enable_word_audio_search(self):
-        anki_settings = self.settings.settings_data
-        if "enable_word_audio_search" in anki_settings:
-            return anki_settings["enable_word_audio_search"]
-        else:
-            return False
+    def update_anki_settings(self, key, value):
+        return self.settings.update_settings_data({key: value})
     
     def update_enable_word_audio_search(self, enable_word_audio_search):
         return self.settings.update_settings_data({'enable_word_audio_search': enable_word_audio_search})
@@ -92,7 +87,7 @@ class AnkiHelper():
         models = self.settings.get_models()
         model_filter_string = '({})'.format(' OR '.join(['"note:{}"'.format(model) for model in models])) if models else ''
         query_string = keyword
-        enable_suspended = self.get_enable_suspended()
+        enable_suspended = self.get_anki_settings("enable_suspended")
         if model_filter_string:
             query_string += ' ' + model_filter_string
         if deck_name:
@@ -152,8 +147,17 @@ class AnkiHelper():
             "data": result
         }
 
+    def add_options_to_notes(self, notes):
+        for note in notes:
+            if 'options' not in notes:
+                note['options'] = {}
+            if 'allowDuplicate' not in note['options']: # prioritize request settings over user settings
+                note['options']['allowDuplicate'] = self.get_anki_settings('allow_duplicate') # to refactor in the future
+        return notes
+
     def add_notes(self, notes):
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        notes = self.add_options_to_notes(notes)
+        with ThreadPoolExecutor(max_workers=4) as executor:
             future_to_note_id = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
             for future in as_completed(future_to_note_id):
                 note_id = future_to_note_id[future]
