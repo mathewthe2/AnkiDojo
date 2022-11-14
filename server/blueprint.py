@@ -8,7 +8,7 @@ from .user_apps import UserApps
 from .japanese import Japanese
 from .google_lens import get_google_lens_url
 from .scraper import Scraper
-
+from .simple_websocket import Server, ConnectionClosed
 from flask import (
     Blueprint, Response, current_app, jsonify, redirect, request, redirect, send_from_directory, stream_with_context
 )
@@ -39,6 +39,17 @@ def bool_param(json_body, child):
     return child in json_body and json_body[child] == True
 
 bp = Blueprint('mine', __name__)
+
+@bp.route('/echo', websocket=True)
+def echo():
+    ws = Server(request.environ)
+    try:
+        while True:
+            data = ws.receive()
+            ws.send(data)
+    except ConnectionClosed:
+        pass
+    return ''
 
 @bp.route('/')
 def index():
