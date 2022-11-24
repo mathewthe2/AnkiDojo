@@ -1,4 +1,5 @@
 import requests
+import zipfile
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from .config import config
@@ -6,6 +7,7 @@ from .anki_config import DEFAULT_ANKI_SETTINGS
 from .util import AnkiHelper
 from .user_apps import UserApps
 from .japanese import Japanese
+from .dictionary import Dictionary
 from .google_lens import get_google_lens_url
 from .scraper import Scraper
 from .simple_websocket import Server, ConnectionClosed
@@ -50,6 +52,16 @@ def echo():
     except ConnectionClosed:
         pass
     return ''
+
+@bp.route("/api/dictionaries", methods=('GET', 'POST', 'DELETE'))
+def dictionaries():
+    if request.method == "POST":
+        f = request.files['file']
+        archive = zipfile.ZipFile(f, 'r')
+        dictionary = Dictionary()
+        dictionary_name = dictionary.add_dictionary(archive)
+        return jsonify({"added": dictionary_name})
+    return jsonify({"error": "failed to add dictionary"})
 
 @bp.route('/')
 def index():
