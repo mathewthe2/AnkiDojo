@@ -1,6 +1,7 @@
 import zipfile
 import sqlite3
 import json
+from .dictionary_table import DictionaryTable, DictionaryActive
 
 # save new dictionary db with database connection
 def add_dictionary_from_archive(archive, con):
@@ -39,15 +40,17 @@ def add_dictionary_from_archive(archive, con):
             "sequence": raw_term[6]
         })
 
-    def getLastRecordId():
-        res = cur.execute("SELECT id FROM Vocab ORDER BY id DESC LIMIT 1;")
+    def getLastRecordId(table):
+        if (table not in DictionaryTable):
+            return 0
+        res = cur.execute("SELECT id FROM {} ORDER BY id DESC LIMIT 1;".format(table.value))
         id = res.fetchone()
         if id:
             return id
         return 0
 
-    lastRecordId = getLastRecordId()
-    dictionaryId = 1
+    lastRecordId = getLastRecordId(DictionaryTable.VOCAB)
+    dictionaryId = 1 + getLastRecordId(DictionaryTable.DICTIONARY)
     dictionary_entry_values = []
     dictionary_meaning_values = []
     for entry in dictionary_entries:
@@ -69,9 +72,11 @@ def add_dictionary_from_archive(archive, con):
                 dictionaryId
             ))
     cur.executemany("""
-        INSERT INTO Vocab(id, dictionaryId, expression, reading, meaningTags, termTags, popularity, sequence) 
+        INSERT INTO {}(id, dictionaryId, expression, reading, meaningTags, termTags, popularity, sequence) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, dictionary_entry_values)
-    cur.executemany('INSERT INTO VocabGloss(glossary, vocabId, dictionaryId) VALUES(?, ?, ?)', dictionary_meaning_values)
+        """.format(DictionaryTable.VOCAB.value), dictionary_entry_values)
+    cur.executemany('INSERT INTO {}(glossary, vocabId, dictionaryId) VALUES(?, ?, ?)'.format(DictionaryTable.VOCAB_GLOSS.value), dictionary_meaning_values)
+    cur.execute('INSERT INTO {}(title, enabled) VALUES(?, ?)'.format(DictionaryTable.DICTIONARY.value), (dictionary_name, DictionaryActive.ENABLED.value)) 
+    # dictionary_id = cur.lastrowid
     con.commit()
     return dictionary_name
