@@ -55,10 +55,13 @@ def echo():
 
 @bp.route("/api/dictionaries", methods=('GET', 'POST', 'DELETE'))
 def dictionaries():
-    if request.method == "POST":
+    dictionary = Dictionary()
+    if request.method == 'GET':
+        user_dictionaries = dictionary.get_dictionaries()
+        return jsonify(user_dictionaries)
+    elif request.method == "POST":
         f = request.files['file']
         archive = zipfile.ZipFile(f, 'r')
-        dictionary = Dictionary()
         dictionary_name = dictionary.add_dictionary(archive)
         return jsonify({"added": dictionary_name})
     return jsonify({"error": "failed to add dictionary"})

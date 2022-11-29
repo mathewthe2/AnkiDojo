@@ -1,4 +1,3 @@
-import sqlite3
 from .dictionary_table import DictionaryTable
 
 # setup new dictionary db with database connection

@@ -1,5 +1,4 @@
 import zipfile
-import sqlite3
 import json
 from .dictionary_table import DictionaryTable, DictionaryActive
 

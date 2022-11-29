@@ -2,6 +2,7 @@ import os
 import sqlite3
 from .add_dictionary import add_dictionary_from_archive
 from .setup_dictionary import setup_dictionary
+from .get_dictionaries import get_dictionaries
 
 # Paths
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', '..', 'user_files')
@@ -13,6 +14,11 @@ class Dictionary():
             self._setup_dictionary()
         else:
             self.con = sqlite3.connect(dictionary_database_path)
+
+    def get_dictionaries(self):
+        if self.con is None:
+            return []
+        return get_dictionaries(self.con)
 
     def add_dictionary(self, archive):
         if self.con is None:
