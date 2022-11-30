@@ -3,6 +3,7 @@ import os
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 import random
+from .utils.singleton import Singleton
 from .anki_config import DEFAULT_ANKI_SETTINGS
 from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
@@ -15,7 +16,7 @@ try:
 except:
     NotFoundError = Exception
 
-class AnkiHelper():
+class AnkiHelper(metaclass=Singleton):
     def __init__(self, dev_mode=False):
         self.settings = AnkiSettings('ankiSettings.json' if not dev_mode else 'ankiDevSettings.json')
         self.morph_settings = MorphSettings()

@@ -3,7 +3,6 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from logging.config import dictConfig
-# from .util import instance_dir
 
 # Direct Flask's logging to sys.stdout instead of sys.stderr
 dictConfig({
@@ -52,10 +51,14 @@ def create_flask_app(test_config=None, dev_mode=False):
 
     import importlib
     from . import blueprint
-    from .controllers import dictionary_controller
+    from .controllers import anki_settings_controller, dictionary_controller, morphs_controller, terms_controller
+
     importlib.reload(blueprint) # support hot reload of the blueprint
     app.register_blueprint(blueprint.bp, dev_mode=dev_mode)
     app.register_blueprint(dictionary_controller.bp, url_prefix='/api/dictionaries', dev_mode=dev_mode)
+    app.register_blueprint(morphs_controller.bp, url_prefix='/api/moprhs', dev_mode=dev_mode)
+    app.register_blueprint(terms_controller.bp, url_prefix='/api/terms', dev_mode=dev_mode)
+    app.register_blueprint(anki_settings_controller.bp, url_prefix='/api/anki_settings', dev_mode=dev_mode)
     app.add_url_rule('/', endpoint='index')
 
     CORS(app)
