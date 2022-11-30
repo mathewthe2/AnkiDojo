@@ -1,6 +1,6 @@
 
 import zipfile
-from AnkiDojo.server.dictionary import Dictionary
+from ..dictionary import Dictionary
 from flask import Blueprint, Response, jsonify, request
 
 bp = Blueprint('dictionaries', __name__)
