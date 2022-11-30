@@ -8,8 +8,8 @@ from flask import Blueprint, Response, jsonify, request
 ankiHelper = AnkiHelper(dev_mode=config['dev_mode'])
 bp = Blueprint('anki_settings', __name__)
 
-@bp.route("/api/anki_settings", methods=('GET', 'POST'))
-@bp.route("/api/anki_settings/<string:key>", methods=('GET', 'POST'))
+@bp.route("", methods=('GET', 'POST'))
+@bp.route("/<string:key>", methods=('GET', 'POST'))
 def anki_settings(key=None):
     has_valid_key = key in DEFAULT_ANKI_SETTINGS.keys()
     if request.method == 'GET':

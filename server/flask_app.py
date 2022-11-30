@@ -56,7 +56,7 @@ def create_flask_app(test_config=None, dev_mode=False):
     importlib.reload(blueprint) # support hot reload of the blueprint
     app.register_blueprint(blueprint.bp, dev_mode=dev_mode)
     app.register_blueprint(dictionary_controller.bp, url_prefix='/api/dictionaries', dev_mode=dev_mode)
-    app.register_blueprint(morphs_controller.bp, url_prefix='/api/moprhs', dev_mode=dev_mode)
+    app.register_blueprint(morphs_controller.bp, url_prefix='/api/morphs', dev_mode=dev_mode)
     app.register_blueprint(terms_controller.bp, url_prefix='/api/terms', dev_mode=dev_mode)
     app.register_blueprint(anki_settings_controller.bp, url_prefix='/api/anki_settings', dev_mode=dev_mode)
     app.add_url_rule('/', endpoint='index')
