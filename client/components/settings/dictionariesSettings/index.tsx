@@ -17,14 +17,15 @@ import { useState, useEffect } from "react"
 // import { useQuery } from "react-query"
 import { IconUpload, IconX, IconFile } from "@tabler/icons";
 import DictionaryItem from "./dictionaryItem";
-import { getDictionaries } from "@/lib/dictionaries";
+import { getDictionaries, addDictionary } from "@/lib/dictionaries";
+import Dictionary from "@/interfaces/dictionary/Dictionary";
 
 
 function DictionariesSettings() {
     const [files, setFiles] = useState<FileWithPath[]>([]);
     const theme = useMantineTheme();
     const [dropModalOpened, setDropModalOpened] = useState(false);
-    const [dictionaries, setDictionaries] = useState([]);
+    const [dictionaries, setDictionaries] = useState<Dictionary[]>([]);
 
     useEffect(() => {
         getDictionaries().then((dictionaries) => setDictionaries(dictionaries));
@@ -37,9 +38,13 @@ function DictionariesSettings() {
         }
     }, [files]);
 
-    const handleFile = (file: FileWithPath) => {
-        console.log(file);
+    const handleFile = async (file: FileWithPath) => {
+        setDropModalOpened(false);
+        const newDictionary : Dictionary = await addDictionary(file);
+        // TODO: show loading modal here
+        setDictionaries([...dictionaries, newDictionary]);
     };
+
     return (
         <>
             <Button mt={10} onClick={() => setDropModalOpened(true)}>
@@ -100,8 +105,10 @@ function DictionariesSettings() {
                 </Dropzone>
             </Modal>
             <Box pt={10}></Box>
-            {dictionaries.map(dictionary => (
-                <DictionaryItem dictionary={dictionary} />
+            {dictionaries.map((dictionary:Dictionary) => (
+                <Box key={dictionary.id}>
+                    <DictionaryItem dictionary={dictionary} />
+                </Box>
             ))}
 
         </>

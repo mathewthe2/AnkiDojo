@@ -25,8 +25,8 @@ def dictionary_controller():
         try:
             f = request.files['file']
             archive = zipfile.ZipFile(f, 'r')
-            dictionary_name = dictionary.add_dictionary(archive)
-            return jsonify({"added": dictionary_name})
+            new_dictionary = dictionary.add_dictionary(archive)
+            return jsonify(new_dictionary)
         except:
             return jsonify({"error": "failed to add dictionary"})
     elif request.method == 'DELETE':

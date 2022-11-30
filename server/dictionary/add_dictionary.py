@@ -48,15 +48,15 @@ def add_dictionary_from_archive(archive, con):
             return id
         return 0
 
-    lastRecordId = getLastRecordId(DictionaryTable.VOCAB)
-    dictionaryId = 1 + getLastRecordId(DictionaryTable.DICTIONARY)
+    last_record_id = getLastRecordId(DictionaryTable.VOCAB)
+    dictionary_id = 1 + getLastRecordId(DictionaryTable.DICTIONARY)
     dictionary_entry_values = []
     dictionary_meaning_values = []
     for entry in dictionary_entries:
-        lastRecordId += 1
+        last_record_id += 1
         dictionary_entry_values.append((
-            lastRecordId, 
-            dictionaryId, 
+            last_record_id, 
+            dictionary_id, 
             entry["term"], 
             entry["reading"], 
             entry["meaning_tags"], 
@@ -67,8 +67,8 @@ def add_dictionary_from_archive(archive, con):
         for meaning in entry["meanings"]:
             dictionary_meaning_values.append((
                 meaning,
-                lastRecordId,
-                dictionaryId
+                last_record_id,
+                dictionary_id
             ))
     cur.executemany("""
         INSERT INTO {}(id, dictionaryId, expression, reading, meaningTags, termTags, popularity, sequence) 
@@ -76,6 +76,10 @@ def add_dictionary_from_archive(archive, con):
         """.format(DictionaryTable.VOCAB.value), dictionary_entry_values)
     cur.executemany('INSERT INTO {}(glossary, vocabId, dictionaryId) VALUES(?, ?, ?)'.format(DictionaryTable.VOCAB_GLOSS.value), dictionary_meaning_values)
     cur.execute('INSERT INTO {}(title, enabled) VALUES(?, ?)'.format(DictionaryTable.DICTIONARY.value), (dictionary_name, DictionaryActive.ENABLED.value)) 
-    # dictionary_id = cur.lastrowid
     con.commit()
-    return dictionary_name
+    new_dictionary = {
+        "id": dictionary_id,
+        "name": dictionary_name,
+        'enabled': True
+    }
+    return new_dictionary

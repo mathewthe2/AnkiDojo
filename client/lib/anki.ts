@@ -43,6 +43,23 @@ const postAnki = async (
   }
 };
 
+const postAnkiMultiBody = async (
+  endpoint: AnkiSettingType | string,
+  formData: FormData,
+  method: string = "POST"
+) => {
+  const response = await fetch(`${process.env.ANKI_HOST}/api/${endpoint}`, {
+    method: method,
+    body: formData,
+  });
+  try {
+    const content = await response.json();
+    return content;
+  } catch (e) {
+    console.warn(e);
+  }
+};
+
 const getAnkiSettings = async (endpoint: AnkiSettingType) =>
   await fetchAnki(`anki_settings/${endpoint}`);
 const postAnkiSettings = async (endpoint: AnkiSettingType, value: any) =>
@@ -150,4 +167,5 @@ export {
   FieldValueType,
   fetchAnki,
   postAnki,
+  postAnkiMultiBody,
 };

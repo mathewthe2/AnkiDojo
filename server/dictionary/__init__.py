@@ -25,8 +25,8 @@ class Dictionary():
     def add_dictionary(self, archive):
         if self.con is None:
             return None
-        dictionary_name = add_dictionary_from_archive(archive, self.con)
-        return dictionary_name
+        new_dictionary = add_dictionary_from_archive(archive, self.con)
+        return new_dictionary
 
     def set_enabled(self, id, enabled):
         if self.con is None:
