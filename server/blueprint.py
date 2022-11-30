@@ -1,5 +1,4 @@
 import requests
-import zipfile
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from .config import config
@@ -52,19 +51,6 @@ def echo():
     except ConnectionClosed:
         pass
     return ''
-
-@bp.route("/api/dictionaries", methods=('GET', 'POST', 'DELETE'))
-def dictionaries():
-    dictionary = Dictionary()
-    if request.method == 'GET':
-        user_dictionaries = dictionary.get_dictionaries()
-        return jsonify(user_dictionaries)
-    elif request.method == "POST":
-        f = request.files['file']
-        archive = zipfile.ZipFile(f, 'r')
-        dictionary_name = dictionary.add_dictionary(archive)
-        return jsonify({"added": dictionary_name})
-    return jsonify({"error": "failed to add dictionary"})
 
 @bp.route('/')
 def index():

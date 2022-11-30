@@ -14,26 +14,32 @@ import {
 } from "@mantine/dropzone";
 import { IconPlus } from "@tabler/icons";
 import { useState, useEffect } from "react"
-import { useQuery } from "react-query"
+// import { useQuery } from "react-query"
 import { IconUpload, IconX, IconFile } from "@tabler/icons";
 import DictionaryItem from "./dictionaryItem";
+import { getDictionaries } from "@/lib/dictionaries";
 
 
 function DictionariesSettings() {
     const [files, setFiles] = useState<FileWithPath[]>([]);
     const theme = useMantineTheme();
     const [dropModalOpened, setDropModalOpened] = useState(false);
+    const [dictionaries, setDictionaries] = useState([]);
+
+    useEffect(() => {
+        getDictionaries().then((dictionaries) => setDictionaries(dictionaries));
+    }, []);
 
     useEffect(() => {
         if (files.length > 0) {
-          // console.log(files[0]);
-          handleFile(files[0]);
+            // console.log(files[0]);
+            handleFile(files[0]);
         }
-      }, [files]);
+    }, [files]);
 
-      const handleFile = (file: FileWithPath) => {
+    const handleFile = (file: FileWithPath) => {
         console.log(file);
-      };
+    };
     return (
         <>
             <Button mt={10} onClick={() => setDropModalOpened(true)}>
@@ -94,7 +100,10 @@ function DictionariesSettings() {
                 </Dropzone>
             </Modal>
             <Box pt={10}></Box>
-            <DictionaryItem />
+            {dictionaries.map(dictionary => (
+                <DictionaryItem dictionary={dictionary} />
+            ))}
+
         </>
     )
 }
