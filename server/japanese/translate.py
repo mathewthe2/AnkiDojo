@@ -48,15 +48,23 @@ class Translator:
             for df in dfs:
                 self.processTerm(groups, **df, reading=reading)
 
+        def sourceTermExactMatchCount(expression):
+            return 1 if expression == text else 0
+
         definitions = groups.values()
+        #  // https://github.com/FooSoft/yomichan/blob/f3024c50186344aa6a6b09500ea02540463ce5c9/ext/js/language/translator.js#L1364
         definitions = sorted(
             definitions,
             reverse=True,
             key=lambda d: (
                 len(d['source']),
+                sourceTermExactMatchCount(d['expression']),
+                d['popularity'],
                 'P' in d['tags'],
                 -len(d['rules']),
-                d['expression']
+                d['expression'],    
+                len(d['glossary']),
+                d['id'],                
             )
         )
 
@@ -93,14 +101,16 @@ class Translator:
 
             if matched:
                 groups[entry['id']] = {
+                    'id': entry['id'],
                     'expression': entry['expression'],
                     'reading':    entry['reading'],
                     'glossary':   entry['glossary'],
+                    'popularity': entry['popularity'],
                     'tags':       entry['tags'],
                     'source':     source,
                     'rules':      rules
                 }
-
+                
 if __name__ == '__main__':
     import os
     from dictionary import Dictionary

@@ -19,30 +19,35 @@
 import operator
 import sqlite3
 
+from .dictionary_entry import DictionaryEntry
+
+TERM_LIMIT = 1000
+
 
 class Dictionary:
     def __init__(self, filename, index=True):
         self.db = sqlite3.connect(filename)
-        self.indices = set()
+        # self.indices = set()
 
 
     def findTerm(self, text, wildcards=False, reading=None):
-        self.requireIndex('Vocab', 'expression')
-        self.requireIndex('Vocab', 'reading')
-        self.requireIndex('VocabGloss', 'vocabId')
+        # self.requireIndex('Vocab', 'expression')
+        # self.requireIndex('Vocab', 'reading')
+        # self.requireIndex('VocabGloss', 'vocabId')
 
         cursor = self.db.cursor()
 
         definitions = []
         if reading:
-            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? AND reading=?'.format('LIKE' if wildcards else '='), (text, reading))
+            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? AND reading=? LIMIT {1}'.format('LIKE' if wildcards else '=', TERM_LIMIT), (text, reading))
         else:
-            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? OR reading=?'.format('LIKE' if wildcards else '='), (text, text))    
-        for vocabId, expression, reading, tags in cursor.fetchall():
-            tags = tags.split()
+            cursor.execute('SELECT * FROM Vocab WHERE expression {0} ? OR reading=? LIMIT {1}'.format('LIKE' if wildcards else '=', TERM_LIMIT), (text, text))    
+        for vocabulary_item in cursor.fetchall():
+            entry = DictionaryEntry(*vocabulary_item)
+            tags = entry.term_tags.split()
 
-            cursor.execute('SELECT glossary From VocabGloss WHERE vocabId=?', (vocabId,))
-            glossary = map(operator.itemgetter(0), cursor)
+            cursor.execute('SELECT glossary From VocabGloss WHERE vocabId=?', (entry.id,))
+            glossary = [g[0] for g in cursor.fetchall()]
 
             #
             # TODO: Handle addons through data.
@@ -56,11 +61,12 @@ class Dictionary:
                     addons.append('vs')
 
             definitions.append({
-                'id':         vocabId,
-                'expression': expression,
-                'reading':    reading,
+                'id':         entry.id,
+                'expression': entry.term,
+                'reading':    entry.reading,
                 'glossary':   glossary,
                 'tags':       tags + addons,
+                'popularity': entry.popularity,
                 'addons':     addons
             })
 
@@ -70,49 +76,49 @@ class Dictionary:
     def findKanji(self, text):
         assert len(text) == 1
 
-        self.requireIndex('Kanji', 'character')
-        self.requireIndex('KanjiGloss', 'kanjiId')
+        # self.requireIndex('Kanji', 'character')
+        # self.requireIndex('KanjiGloss', 'kanjiId')
 
-        cursor = self.db.cursor()
+        # cursor = self.db.cursor()
 
-        cursor.execute('SELECT * FROM Kanji WHERE character=? LIMIT 1', text)
-        query = cursor.fetchone()
-        if query is None:
-            return
+        # cursor.execute('SELECT * FROM Kanji WHERE character=? LIMIT 1', text)
+        # query = cursor.fetchone()
+        # if query is None:
+        #     return
 
-        kanjiId, character, kunyomi, onyomi = query
-        cursor.execute('SELECT glossary From KanjiGloss WHERE kanjiId=?', (kanjiId,))
-        glossary = map(operator.itemgetter(0), cursor)
+        # kanjiId, character, kunyomi, onyomi = query
+        # cursor.execute('SELECT glossary From KanjiGloss WHERE kanjiId=?', (kanjiId,))
+        # glossary = map(operator.itemgetter(0), cursor)
 
-        return {
-            'id':        kanjiId,
-            'character': character,
-            'kunyomi':   [] if kunyomi is None else kunyomi.split(),
-            'onyomi':    [] if onyomi is None else onyomi.split(),
-            'glossary':  glossary
-        }
-
-
-    def requireIndex(self, table, column):
-        name = 'index_{0}_{1}'.format(table, column)
-        if not self.hasIndex(name):
-            self.buildIndex(name, table, column)
+        # return {
+        #     'id':        kanjiId,
+        #     'character': character,
+        #     'kunyomi':   [] if kunyomi is None else kunyomi.split(),
+        #     'onyomi':    [] if onyomi is None else onyomi.split(),
+        #     'glossary':  glossary
+        # }
 
 
-    def buildIndex(self, name, table, column):
-        cursor = self.db.cursor()
-        cursor.execute('CREATE INDEX {0} ON {1}({2})'.format(name, table, column))
-        self.db.commit()
+    # def requireIndex(self, table, column):
+    #     name = 'index_{0}_{1}'.format(table, column)
+    #     if not self.hasIndex(name):
+    #         self.buildIndex(name, table, column)
 
 
-    def hasIndex(self, name):
-        if name in self.indices:
-            return True
+    # def buildIndex(self, name, table, column):
+    #     cursor = self.db.cursor()
+    #     cursor.execute('CREATE INDEX {0} ON {1}({2})'.format(name, table, column))
+    #     self.db.commit()
 
-        cursor = self.db.cursor()
-        cursor.execute('SELECT * FROM sqlite_master WHERE name=?', (name,))
-        if len(cursor.fetchall()) == 0:
-            return False
 
-        self.indices.update([name])
-        return True
+    # def hasIndex(self, name):
+    #     if name in self.indices:
+    #         return True
+
+    #     cursor = self.db.cursor()
+    #     cursor.execute('SELECT * FROM sqlite_master WHERE name=?', (name,))
+    #     if len(cursor.fetchall()) == 0:
+    #         return False
+
+    #     self.indices.update([name])
+    #     return True
