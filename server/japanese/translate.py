@@ -111,15 +111,15 @@ class Translator:
                     'rules':      rules
                 }
                 
-if __name__ == '__main__':
-    import os
-    from dictionary import Dictionary
-    from deinflect import Deinflector
-    directory = os.path.dirname(__file__)
-    t = Translator(
-            Deinflector(os.path.join(directory, 'deinflect.json')),
-            Dictionary(os.path.join(directory, 'dictionary.db')))
-    defs, _ = t.findTermWithReading('中', 'なか')
-    print(list(defs[0]['glossary']))
-    defs, _ = t.findTerm('中')
-    print(list(defs[0]['glossary']))
+# if __name__ == '__main__':
+#     import os
+#     from dictionary import Dictionary
+#     from deinflect import Deinflector
+#     directory = os.path.dirname(__file__)
+#     t = Translator(
+#             Deinflector(os.path.join(directory, 'deinflect.json')),
+#             Dictionary(os.path.join(directory, 'dictionary.db')))
+#     defs, _ = t.findTermWithReading('中', 'なか')
+#     print(list(defs[0]['glossary']))
+#     defs, _ = t.findTerm('中')
+#     print(list(defs[0]['glossary']))
