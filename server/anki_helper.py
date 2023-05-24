@@ -158,13 +158,12 @@ class AnkiHelper(metaclass=Singleton):
 
     def add_notes(self, notes):
         notes = self.add_options_to_notes(notes)
-        result = []
-        for note in notes:
-            created_note_result = self.ankiConnect.addNote(note)
-            result.append({
-                "id": created_note_result.id,
-                "fields": {key: value for key, value in created_note_result.items()}
-            })
+        note_results = self.ankiConnect.addNotes(notes)
+        result = [{
+                "id": result.id,
+                "fields": {key: value for key, value in result.items()}
+        } for result in note_results]
+
         # with ThreadPoolExecutor(max_workers=4) as executor:
         #     future_to_created_note = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
         #     for future in as_completed(future_to_created_note):

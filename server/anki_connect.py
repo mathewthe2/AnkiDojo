@@ -4,26 +4,52 @@ import enum
 import base64
 import hashlib
 
+anki_version = tuple(int(segment) for segment in aqt.appVersion.split("."))
+
+if anki_version < (2, 1, 45):
+    raise Exception("Minimum Anki version supported: 2.1.45")
+
+# This is a modified version of AnkiConnect
+# that extends single add_note operations to support batch add_note operations
+# For example, a duplicate card error is logged but not raised as an exception
 # https://github.com/FooSoft/anki-connect/blob/master/plugin/__init__.py
+
 class AnkiConnect():
     def __init__(self):
         pass
 
-    def addNote(self, note):
-        ankiNote = self.createNote(note)
-
-        self.addMediaFromNote(ankiNote, note)
-
+    def addNotes(self, notes):
+        if len(notes) == 0:
+            return []
+        ankiNotes = []
+        deck_id = self._getDeckId(notes[0])
+        for note in notes:
+            try:
+                ankiNote = self.createNote(note, deck_id)
+            except Exception as e:
+                print("Failed to add note:", str(e))
+            else:
+                if ankiNote:
+                    self.addMediaFromNote(ankiNote, note)
+                    ankiNotes.append(ankiNote)
+        if len(ankiNotes) > 0:
+            deck_id = ankiNotes[0].model()['did']
+            self.add_notes_batch(ankiNotes, deck_id)
+        return ankiNotes
+    
+    # Add note with UI update: aqt.operations.note.add_note()
+    # Add note without UI update: collection.add_note()
+    # The current band-aid solution is to add all notes without UI update and add the last note with UI update.
+    # If we simply loop through all card additions with UI updates, that will cause the app to crash.
+    def add_notes_batch(self, ankiNotes, deck_id):
         collection = self.collection()
-        self.startEditing()
-        nCardsAdded = collection.addNote(ankiNote)
-        if nCardsAdded < 1:
-            raise Exception('The field values you have provided would make an empty question on all cards.')
+        # Add every card without UI update to prevent 
+        for ankiNote in ankiNotes[:-1]:
+            collection.add_note(ankiNote, deck_id)
+        # Add card with UI update
+        aqt.operations.note.add_note(parent=self.window(), note=ankiNotes[-1], target_deck_id=deck_id).run_in_background()
         collection.autosave()
-        self.stopEditing()
-
-        return ankiNote
-
+    
     def media(self):
         media = self.collection().media
         if media is None:
@@ -41,13 +67,26 @@ class AnkiConnect():
         pictureObjectOrList = note.get('picture')
         self.addMedia(ankiNote, pictureObjectOrList, MediaType.Picture)
 
-    def startEditing(self):
-        self.window().requireReset()
+    # deprecated
+    # def startEditing(self):
+    #     self.window().requireReset()
 
-    def stopEditing(self):
-        if self.collection() is not None:
-            self.window().maybeReset()
+    # deprecated
+    # def stopEditing(self):
+    #     if self.collection() is not None:
+    #         self.window().maybeReset()
 
+    def _getDeckId(self, note):
+        deck = self.collection().decks.byName(note['deckName'])
+        if deck is None:
+            raise Exception('deck was not found: {}'.format(note['deckName']))
+
+    def _getModelId(self, note):
+       deck = self.collection().decks.byName(note['deckName'])
+       if deck is None:
+           raise Exception('deck was not found: {}'.format(note['deckName']))
+       return deck['id']
+            
     def window(self):
         return aqt.mw
 
@@ -58,19 +97,15 @@ class AnkiConnect():
 
         return collection
 
-    def createNote(self, note):
+    def createNote(self, note, deck_id):
         collection = self.collection()
 
         model = collection.models.byName(note['modelName'])
         if model is None:
             raise Exception('model was not found: {}'.format(note['modelName']))
 
-        deck = collection.decks.byName(note['deckName'])
-        if deck is None:
-            raise Exception('deck was not found: {}'.format(note['deckName']))
-
         ankiNote = anki.notes.Note(collection, model)
-        ankiNote.model()['did'] = deck['id']
+        ankiNote.model()['did'] = deck_id
         if 'tags' in note:
             ankiNote.tags = note['tags']
 
@@ -109,7 +144,7 @@ class AnkiConnect():
 
         duplicateOrEmpty = self.isNoteDuplicateOrEmptyInScope(
             ankiNote,
-            deck,
+            deck_id,
             collection,
             duplicateScope,
             duplicateScopeDeckName,
@@ -118,20 +153,20 @@ class AnkiConnect():
         )
 
         if duplicateOrEmpty == 1:
-            raise Exception('cannot create note because it is empty')
+            return None # raise Exception('cannot create note because it is empty')
         elif duplicateOrEmpty == 2:
             if allowDuplicate:
                 return ankiNote
-            raise Exception('cannot create note because it is a duplicate')
+            return None # raise Exception('cannot create note because it is a duplicate')
         elif duplicateOrEmpty == 0:
             return ankiNote
         else:
-            raise Exception('cannot create note for unknown reason')
+            return None # raise Exception('cannot create note for unknown reason')
 
     def isNoteDuplicateOrEmptyInScope(
         self,
         note,
-        deck,
+        deck_id,
         collection,
         duplicateScope,
         duplicateScopeDeckName,
@@ -155,7 +190,7 @@ class AnkiConnect():
         # Create dictionary of deck ids
         dids = None
         if duplicateScope == 'deck':
-            did = deck['id']
+            did = deck_id
             if duplicateScopeDeckName is not None:
                 deck2 = collection.decks.byName(duplicateScopeDeckName)
                 if deck2 is None:
