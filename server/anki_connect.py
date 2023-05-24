@@ -22,6 +22,7 @@ class AnkiConnect():
         if len(notes) == 0:
             return []
         ankiNotes = []
+        skippedNotes = []
         deck_id = self._getDeckId(notes[0])
         for note in notes:
             try:
@@ -32,10 +33,12 @@ class AnkiConnect():
                 if ankiNote:
                     self.addMediaFromNote(ankiNote, note)
                     ankiNotes.append(ankiNote)
+                else:
+                    skippedNotes.append(note['fields'])
         if len(ankiNotes) > 0:
             deck_id = ankiNotes[0].model()['did']
             self.add_notes_batch(ankiNotes, deck_id)
-        return ankiNotes
+        return ankiNotes, skippedNotes
     
     # Add note with UI update: aqt.operations.note.add_note()
     # Add note without UI update: collection.add_note()

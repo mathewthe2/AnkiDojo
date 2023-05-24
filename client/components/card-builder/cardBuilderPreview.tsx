@@ -91,7 +91,7 @@ function CardBuilderPreview({
   const [deckNames, setDeckNames] = useState([]);
   const [mecabMissing, setMecabMissing] = useState(false);
   const [hasResult, setHasResult] = useState(false);
-  const [noteResults, setNoteResults] = useState<NoteResult[]>([]);
+  const [noteResult, setNoteResult] = useState<NoteResult>();
   const [noteResultExpressionKey, setNoteResultExpressionKey] = useState("");
   const [selectedDeckName, setSelectedDeckName] = useState("");
   const [cardFormatModelName, setCardFormatModelName] = useState("");
@@ -299,7 +299,7 @@ function CardBuilderPreview({
     sound.play();
   };
 
-  const bulkAddToAnki = async() => {
+  const bulkAddToAnki = async () => {
     const modelMap = cardFormats.find(
       (cardFormat) => cardFormat.modelName === cardFormatModelName
     )?.modelMap;
@@ -373,7 +373,7 @@ function CardBuilderPreview({
       };
     });
     const addNotesResult = await addNotesToAnki(notesToAdd);
-    setNoteResults(addNotesResult || []);
+    setNoteResult(addNotesResult);
     setNoteResultExpressionKey(expressionKey);
     setHasResult(true);
     // if (onSuccessCallback) {
@@ -452,15 +452,14 @@ function CardBuilderPreview({
   }
 
   if (hasResult) {
-    return <CardBuilderResult noteResults={noteResults} expressionKey={noteResultExpressionKey} onSuccessCallback={onSuccessCallback} />
+    return <CardBuilderResult noteResult={noteResult} expressionKey={noteResultExpressionKey} onSuccessCallback={onSuccessCallback} />
   }
 
   return (
     <>
       <Title color="dimmed" order={5} style={{ textAlign: "center" }}>
-        {`${numberOfUnknownWords()} of ${expressionTerms.length} new ${
-          expressionTerms.length === 1 ? "word" : "words"
-        }`}
+        {`${numberOfUnknownWords()} of ${expressionTerms.length} new ${expressionTerms.length === 1 ? "word" : "words"
+          }`}
       </Title>
       <ScrollArea.Autosize maxHeight={500} style={{ width: "100%" }} mx="auto">
         <Table striped mb={10} ml={5}>
@@ -488,7 +487,7 @@ function CardBuilderPreview({
                   style={{
                     background:
                       expressionTerm.definition?.morph_state ===
-                      MorphState.KNOWN
+                        MorphState.KNOWN
                         ? KnownVocabColor
                         : "inherit",
                   }}
@@ -507,9 +506,9 @@ function CardBuilderPreview({
                             onClick={() =>
                               playWordAudio(
                                 expressionTerm.definition?.selectedAudioUrl ||
-                                  expressionTerm.definition?.audio_urls?.[0]
-                                    .url ||
-                                  ""
+                                expressionTerm.definition?.audio_urls?.[0]
+                                  .url ||
+                                ""
                               )
                             }
                           >
@@ -555,8 +554,8 @@ function CardBuilderPreview({
                                 active={
                                   expressionTerm.definition?.selectedAudioUrl
                                     ? audioUrl.url ===
-                                      expressionTerm.definition
-                                        ?.selectedAudioUrl
+                                    expressionTerm.definition
+                                      ?.selectedAudioUrl
                                     : audioIndex === 0
                                 }
                               />
@@ -703,10 +702,10 @@ function CardBuilderPreview({
                       </Highlight>
                       {expressionTerm.definition
                         ?.sentence_translations?.[0] && (
-                        <Text style={{ fontStyle: "italic" }}>
-                          {expressionTerm.definition.sentence_translations[0]}
-                        </Text>
-                      )}
+                          <Text style={{ fontStyle: "italic" }}>
+                            {expressionTerm.definition.sentence_translations[0]}
+                          </Text>
+                        )}
                     </td>
                   )}
                   {/* no sentences for this expression but has sentences for others */}
