@@ -80,15 +80,10 @@ class AnkiConnect():
     #         self.window().maybeReset()
 
     def _getDeckId(self, note):
-        deck = self.collection().decks.byName(note['deckName'])
+        deck = self.collection().decks.by_name(note['deckName'])
         if deck is None:
             raise Exception('deck was not found: {}'.format(note['deckName']))
-
-    def _getModelId(self, note):
-       deck = self.collection().decks.byName(note['deckName'])
-       if deck is None:
-           raise Exception('deck was not found: {}'.format(note['deckName']))
-       return deck['id']
+        return deck['id']
             
     def window(self):
         return aqt.mw
