@@ -1,7 +1,5 @@
 from aqt import mw
 import os
-from concurrent.futures import as_completed
-from concurrent.futures.thread import ThreadPoolExecutor
 import random
 from .utils.singleton import Singleton
 from .anki_config import DEFAULT_ANKI_SETTINGS
@@ -174,23 +172,6 @@ class AnkiHelper(metaclass=Singleton):
                 } for skipped_note in skipped_notes]
         }
 
-        # with ThreadPoolExecutor(max_workers=4) as executor:
-        #     future_to_created_note = {executor.submit(self.ankiConnect.addNote, note): note for note in notes}
-        #     for future in as_completed(future_to_created_note):
-        #         created_note = future_to_created_note[future]
-        #         try:
-        #             created_note_result = future.result()
-        #             result.append({
-        #                 "id": created_note_result.id,
-        #                 "fields": {key: value for key, value in created_note_result.items()}
-        #                 })
-        #             # auto_add_to_known = self.get_anki_settings("auto_add_to_known")
-        #             # self.add_morphs(content["morphs"], content["state"])
-        #         except Exception as exc:
-        #             print('%r generated an exception: %s' % (created_note, exc))
-        #             return ["exception:", '%r generated an exception: %s' % (created_note, exc)]
-        #         else:
-        #             pass
         return result
 
     def get_known_morphs(self):
