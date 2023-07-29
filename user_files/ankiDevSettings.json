@@ -1,15 +1,15 @@
 {
     "model_maps": {
         "Japanese Anime": {
-            "Picture": "Picture",
-            "Sentence": "Sentence",
-            "Meaning": "Glossary",
             "Audio": "Audio",
-            "Word": "Expression",
             "Kana": "Reading",
+            "Meaning": "Glossary",
+            "Picture": "Picture",
             "Pitch": "Pitch Accent",
+            "Sentence": "Sentence",
             "Sentence Audio": "Sentence Audio",
-            "Sentence Translation": "Sentence Translation"
+            "Sentence Translation": "Sentence Translation",
+            "Word": "Expression"
         },
         "Immersion Kit Vocabulary-5ae55": {
             "Vocabulary-Kanji": "Expression",
@@ -29,7 +29,8 @@
             "Expression": "Sentence"
         }
     },
-    "primary_deck": "Japanese Demo",
+    "primary_deck": "Japanese",
     "enable_suspended": true,
-    "enable_word_audio_search": false
+    "enable_word_audio_search": false,
+    "allow_duplicate": false
 }
