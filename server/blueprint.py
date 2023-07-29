@@ -35,17 +35,6 @@ def proxy(host, path):
 
 bp = Blueprint('mine', __name__)
 
-@bp.route('/echo', websocket=True)
-def echo():
-    ws = Server(request.environ)
-    try:
-        while True:
-            data = ws.receive()
-            ws.send(data)
-    except ConnectionClosed:
-        pass
-    return ''
-
 @bp.route('/')
 def index():
     return redirect("/apps.html")
