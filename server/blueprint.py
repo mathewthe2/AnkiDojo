@@ -6,7 +6,6 @@ from .japanese import Japanese
 from .dictionary import Dictionary
 from .google_lens import get_google_lens_url
 from .scraper import Scraper
-from .simple_websocket import Server, ConnectionClosed
 from flask import (
     Blueprint, Response, current_app, jsonify, redirect, request, redirect, send_from_directory, stream_with_context
 )
