@@ -68,6 +68,7 @@ const useStyles = createStyles((theme) => ({
 }));
 
 const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
+const MILLISECONDS_BEFORE_SHOWING_LOADER = 1000;
 const EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE = [
   "sentences",
   "sentence_translations",
@@ -90,6 +91,7 @@ function CardBuilderPreview({
 }) {
   const [deckNames, setDeckNames] = useState([]);
   const [mecabMissing, setMecabMissing] = useState(false);
+  const [isFetchingResult, setIsFetchingResult] = useState(false);
   const [hasResult, setHasResult] = useState(false);
   const [noteResult, setNoteResult] = useState<NoteResult>();
   const [noteResultExpressionKey, setNoteResultExpressionKey] = useState("");
@@ -372,14 +374,27 @@ function CardBuilderPreview({
         tags: [],
       };
     });
+    setLoadingForLongTasks();
     const addNotesResult = await addNotesToAnki(notesToAdd);
     setNoteResult(addNotesResult);
     setNoteResultExpressionKey(expressionKey);
     setHasResult(true);
+    setIsFetchingResult(false); // whether to show loader or not
     // if (onSuccessCallback) {
     //   onSuccessCallback();
     // }
   };
+
+  /**
+   * Show loader for long tasks
+   */
+  const setLoadingForLongTasks = () => {
+    setTimeout(() => {
+      if (!hasResult) {
+        setIsFetchingResult(true);
+      }
+    }, MILLISECONDS_BEFORE_SHOWING_LOADER);
+  }
 
   const isTermKnown = (term: ExpressionTerm) =>
     term.definition?.morph_state === MorphState.KNOWN;
@@ -428,7 +443,7 @@ function CardBuilderPreview({
   const KnownVocabColor =
     theme.colorScheme === "dark" ? theme.colors.dark[3] : theme.colors.gray[4];
 
-  if (!isLoaded) {
+  if (!isLoaded || isFetchingResult) {
     return <Skeleton height={400} />;
   } else if (mecabMissing) {
     return (
