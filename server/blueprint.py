@@ -6,6 +6,7 @@ from .japanese import Japanese
 from .dictionary import Dictionary
 from .google_lens import get_google_lens_url
 from .scraper import Scraper
+from .status.status_control import StatusControl
 from flask import (
     Blueprint, Response, current_app, jsonify, redirect, request, redirect, send_from_directory, stream_with_context
 )
@@ -14,7 +15,8 @@ from flask import (
 
 WEBPACK_DEV_SERVER_HOST = "http://localhost:8080"
 session = requests.Session()
-ankiHelper = AnkiHelper(dev_mode=config['dev_mode'])
+statusControl = StatusControl()
+ankiHelper = AnkiHelper(dev_mode=config['dev_mode'], statusControl=statusControl)
 userApps = UserApps()
 
 def proxy(host, path):
@@ -132,6 +134,19 @@ def notes():
         if content and "notes" in content:
             result = ankiHelper.add_notes(content["notes"])
         return jsonify(result)
+    
+@bp.route("/api/status")
+@bp.route("/api/status/<int:processing_id>")
+def get_status(processing_id=None):
+    if processing_id is None:
+        return jsonify({"status": "error", "message": "missing processing id"})
+    statusTask = statusControl.get_task(processing_id)
+    if statusTask is None:
+        return jsonify({"status": "error", "message": "not found"})
+    return jsonify({
+        "status": statusTask.get_status(),
+        "progress": statusTask.get_progress_percentage(),
+        "data": statusTask.data})
     
 @bp.route("/api/apps")
 def get_apps():

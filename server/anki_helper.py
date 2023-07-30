@@ -1,10 +1,13 @@
 from aqt import mw
+from aqt.operations import QueryOp
 import os
 import random
 from .utils.singleton import Singleton
 from .anki_config import DEFAULT_ANKI_SETTINGS
 from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
+from .status.status_control import StatusControl
+from .status.status_task import ProgressTypes
 
 # Paths
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', 'user_files')
@@ -15,10 +18,11 @@ except:
     NotFoundError = Exception
 
 class AnkiHelper(metaclass=Singleton):
-    def __init__(self, dev_mode=False):
+    def __init__(self, dev_mode=False, statusControl=None):
         self.settings = AnkiSettings('ankiSettings.json' if not dev_mode else 'ankiDevSettings.json')
         self.morph_settings = MorphSettings()
-        self.ankiConnect = AnkiConnect()
+        self.statusControl = statusControl
+        self.ankiConnect = AnkiConnect(self.statusControl)
 
     def collection(self):
         collection = mw.col
@@ -156,23 +160,14 @@ class AnkiHelper(metaclass=Singleton):
 
     def add_notes(self, notes):
         notes = self.add_options_to_notes(notes)
-        added_notes, skipped_notes = self.ankiConnect.addNotes(notes)
-        result = [{
-                "id": result.id,
-                "fields": {key: value for key, value in result.items()}
-        } for result in added_notes]
-
-        result = {
-            'addedNotes': [{
-                "id": added_note.id,
-                "fields": {key: value for key, value in added_note.items()}
-                } for added_note in added_notes],
-           'skippedNotes': [{
-                "fields": {key: value for key, value in skipped_note.items()}
-                } for skipped_note in skipped_notes]
-        }
-
-        return result
+        task = self.statusControl.create_task(total=len(notes))
+        op = QueryOp(
+            parent=mw,
+            op=lambda _: self.ankiConnect.addNotes(notes, task.id),
+            success=lambda _: None,
+        )
+        op.with_progress().run_in_background()
+        return {'status': ProgressTypes.PROGRESS.value, 'location': 'status/{}'.format(task.id), 'data': []}     
 
     def get_known_morphs(self):
         return self.morph_settings.get_known_morphs()

@@ -3,6 +3,7 @@ import anki
 import enum
 import base64
 import hashlib
+from .status.status_control import StatusControl
 
 anki_version = tuple(int(segment) for segment in aqt.appVersion.split("."))
 
@@ -15,10 +16,10 @@ if anki_version < (2, 1, 45):
 # https://github.com/FooSoft/anki-connect/blob/master/plugin/__init__.py
 
 class AnkiConnect():
-    def __init__(self):
-        pass
+    def __init__(self, statusControl: StatusControl):
+        self.statusControl = statusControl
 
-    def addNotes(self, notes):
+    def addNotes(self, notes, task_id=None):
         if len(notes) == 0:
             return []
         ankiNotes = []
@@ -35,10 +36,21 @@ class AnkiConnect():
                     ankiNotes.append(ankiNote)
                 else:
                     skippedNotes.append(note['fields'])
+            self.statusControl.increment_task(task_id)
+            
         if len(ankiNotes) > 0:
             deck_id = ankiNotes[0].model()['did']
             self.add_notes_batch(ankiNotes, deck_id)
-        return ankiNotes, skippedNotes
+        data = {
+            'addedNotes': [{
+                "id": added_note.id,
+                "fields": {key: value for key, value in added_note.items()}
+                } for added_note in ankiNotes],
+           'skippedNotes': [{
+                "fields": {key: value for key, value in skipped_note.items()}
+                } for skipped_note in skippedNotes]
+        }
+        self.statusControl.complete_task(task_id, data)
     
     # Add note with UI update: aqt.operations.note.add_note()
     # Add note without UI update: collection.add_note()

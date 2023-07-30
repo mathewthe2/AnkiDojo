@@ -78,14 +78,14 @@ function CardBuilderFile({
         reader.onload = function (e) {
           const content = reader.result as string;
           csvtojson()
-          .fromString(content)
-          .then((jsonNotes)=>{ 
-            if (jsonNotes && jsonNotes.length > 0) {
-              setExpressionTerms(jsonNotesToExpressionTerms(jsonNotes));
-              setDropModalOpened(false);
-              setPreviewOpened(true);
-            }
-          })
+            .fromString(content)
+            .then((jsonNotes) => {
+              if (jsonNotes && jsonNotes.length > 0) {
+                setExpressionTerms(jsonNotesToExpressionTerms(jsonNotes));
+                setDropModalOpened(false);
+                setPreviewOpened(true);
+              }
+            })
         };
         reader.readAsText(file);
         break;
@@ -126,7 +126,7 @@ function CardBuilderFile({
                 stroke={1.5}
                 color={
                   theme.colors[theme.primaryColor][
-                    theme.colorScheme === "dark" ? 4 : 6
+                  theme.colorScheme === "dark" ? 4 : 6
                   ]
                 }
               />

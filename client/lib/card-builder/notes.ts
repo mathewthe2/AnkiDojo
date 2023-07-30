@@ -34,28 +34,32 @@ export const addNotesToAnki = async (notesToAdd: NoteAddInterface[]) => {
   });
   try {
     const content = await response.json();
-    const addedNotes: AddedNote[] = content['addedNotes'].map(
-      (addedNote: any) => {
-        return {
-          ...addedNote,
-          fields: new Map(Object.entries(addedNote.fields)),
-        };
-      });
-    const skippedNotes: SkippedNote[] = content['skippedNotes'].map(
-      (skippedNotes: any) => {
-        return {
-          fields: new Map(Object.entries(skippedNotes.fields)),
-        };
-      });
-    const noteResult: NoteResult = {
-      addedNotes: addedNotes,
-      skippedNotes: skippedNotes
-    }
-    return noteResult;
+    return content;
   } catch (e) {
     console.warn(e);
   }
 };
+
+export const responseContentToNoteResult = (content: any): NoteResult => {
+  const addedNotes: AddedNote[] = content['addedNotes'].map(
+    (addedNote: any) => {
+      return {
+        ...addedNote,
+        fields: new Map(Object.entries(addedNote.fields)),
+      };
+    });
+  const skippedNotes: SkippedNote[] = content['skippedNotes'].map(
+    (skippedNotes: any) => {
+      return {
+        fields: new Map(Object.entries(skippedNotes.fields)),
+      };
+    });
+  const noteResult: NoteResult = {
+    addedNotes: addedNotes,
+    skippedNotes: skippedNotes
+  }
+  return noteResult;
+}
 
 export const jsonNotesToExpressionTerms = (jsonNotes: any) => {
   const expressionTerms: ExpressionTerm[] = jsonNotes.map((jsonNote: any) => {

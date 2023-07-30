@@ -1,5 +1,16 @@
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
 
+export enum ProcessingStatusType {
+  Progress = 'progress',
+  Complete = 'complete'
+}
+
+export interface ProcessingDataInterface {
+  status: ProcessingStatusType;
+  data: any;
+  location: string;
+}
+
 const fetchAnki = async (
   endpoint: AnkiSettingType | string,
   isJson: boolean = true

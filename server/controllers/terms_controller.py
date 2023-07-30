@@ -1,12 +1,18 @@
 
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
+from aqt import mw
+from aqt.operations import QueryOp
 from ..japanese import Japanese
 from ..anki_helper import AnkiHelper
+from ..status.status_control import StatusControl
+from ..status.status_task import StatusTask
 from ..config import config
+from ..status.status_task import ProgressTypes
 from flask import Blueprint, Response, jsonify, request
 
 ankiHelper = AnkiHelper(dev_mode=config['dev_mode'])
+statusControl = StatusControl() # global variable
 bp = Blueprint('terms', __name__)
 
 def bool_param(json_body, child):
@@ -98,20 +104,31 @@ def terms():
         else:
             include_audio_urls = ankiHelper.get_anki_settings("enable_word_audio_search")
         if include_audio_urls:
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
-                for future in as_completed(future_to_audio):
-                    audio_source = future_to_audio[future]
-                    try:
-                        audio_result = future.result()
-                    except Exception as exc:
-                        print('%r generated an exception: %s' % (audio_source, exc))
-                    else:
-                        for i in range(0, len(result)):
-                            if 'audio_urls' in result[i]:
-                                continue
-                            if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
-                                result[i]['audio_urls'] = audio_result
-                                break
-                    
-    return jsonify(result)
+            task = statusControl.create_task(total=len(result))
+            op = QueryOp(
+                parent=mw,
+                op=lambda _: add_audio(result, language, task),
+                success=lambda _: None,
+            )
+            op.with_progress().run_in_background()
+            return jsonify({'status': ProgressTypes.PROGRESS.value, 'location': 'status/{}'.format(task.id), 'data': []})     
+    return jsonify({'status': 'complete', 'location': '', 'data': result})
+
+def add_audio(result, language, task):
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_audio = {executor.submit(language.audio_handler.get_audio_sources, word['expression'], word['reading']): word for word in result}
+        for future in as_completed(future_to_audio):
+            audio_source = future_to_audio[future]
+            try:
+                audio_result = future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (audio_source, exc))
+            else:
+                for i in range(0, len(result)):
+                    if 'audio_urls' in result[i]:
+                        continue
+                    if result[i]['expression'] == audio_source['expression'] and result[i]['reading'] == audio_source['reading']:
+                        result[i]['audio_urls'] = audio_result
+                        statusControl.increment_task(task.id)
+                        break
+    statusControl.complete_task(task.id, result)

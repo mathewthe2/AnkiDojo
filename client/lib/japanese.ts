@@ -1,4 +1,4 @@
-import { postAnki } from "./anki";
+import { ProcessingDataInterface, postAnki } from "./anki";
 
 enum JapaneseType {
   Term = "terms",
@@ -30,30 +30,29 @@ const parseForAnki = (content: String) => {
   return content.replace(/(?:\r\n|\r|\n)/g, '<br>');
 }
 
-export const getExpressionForAnki = (definition: Definition | undefined)=> {
-  const expression =  definition?.expression ||definition?.surface ||'';
+export const getExpressionForAnki = (definition: Definition | undefined) => {
+  const expression = definition?.expression || definition?.surface || '';
   return parseForAnki(expression);
 }
 
-export const getGlossaryForAnki = (definition: Definition | undefined)=> {
-  const glossary =  definition?.selectedGlossary || definition?.glossary?.[0] ||'';
+export const getGlossaryForAnki = (definition: Definition | undefined) => {
+  const glossary = definition?.selectedGlossary || definition?.glossary?.[0] || '';
   return parseForAnki(glossary);
 }
 
-export const getGlossaryBriefForAnki = (definition: Definition | undefined)=> {
+export const getGlossaryBriefForAnki = (definition: Definition | undefined) => {
   return getGlossaryForAnki(definition); // TODO: get glossary brief
 }
 
-export const getSentenceForAnki = (definition: Definition | undefined)=> {
+export const getSentenceForAnki = (definition: Definition | undefined) => {
   const sentence = definition?.sentences?.[0] || '';
   return parseForAnki(sentence);
 }
 
-export const getSentenceTranslationForAnki = (definition: Definition | undefined)=> {
+export const getSentenceTranslationForAnki = (definition: Definition | undefined) => {
   const sentenceTranslation = definition?.sentence_translations?.[0] || ""
   return parseForAnki(sentenceTranslation);
 }
-
 
 export const getTermDefinitions = async ({
   keywords,
@@ -63,10 +62,11 @@ export const getTermDefinitions = async ({
   keywords: string[];
   passages?: string[];
   include_audio_urls?: boolean;
-}): Promise<Definition[]> =>
-  await postAnki(JapaneseType.Term, {
+}): Promise<ProcessingDataInterface> => {
+  return await postAnki(JapaneseType.Term, {
     passages: passages || [],
     keywords: keywords,
     include_pitch_graph: true,
     include_audio_urls: include_audio_urls,
   });
+}

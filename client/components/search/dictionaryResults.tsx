@@ -1,4 +1,4 @@
-import { Card, Stack, Text, Group, List, Select } from "@mantine/core";
+import { Card, Stack, Text, Group, List } from "@mantine/core";
 import { useQuery } from "react-query";
 import { ScrollArea } from "@mantine/core";
 import { getTermDefinitions } from "@/lib/japanese";
@@ -7,9 +7,9 @@ import CardBuilderPitchSvg from "../card-builder/cardBuilderPitchSvg";
 import { toHiragana } from "wanakana";
 
 function DictionaryResults({ keyword }: { keyword: string }) {
-  const { data: definitions, isFetching: isLoading } = useQuery(
+  const { data: result, isFetching: isLoading } = useQuery(
     ["terms", keyword],
-    () => getTermDefinitions({keywords: getKeywords(keyword.split(" ")), include_audio_urls: false}),
+    () => getTermDefinitions({ keywords: getKeywords(keyword.split(" ")), include_audio_urls: false }),
     { enabled: keyword.length > 0 }
   );
 
@@ -21,9 +21,9 @@ function DictionaryResults({ keyword }: { keyword: string }) {
 
   return (
     <ScrollArea mt={20}>
-      {definitions &&
-        definitions.length > 0 &&
-        definitions?.map((definition: Definition) => (
+      {result && result.data &&
+        result.data.length > 0 &&
+        result.data?.map((definition: Definition) => (
           <Card key={definition.expression}>
             <Group mb={20} spacing="xl">
               <Stack>

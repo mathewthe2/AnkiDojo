@@ -17,6 +17,7 @@ import {
   UnstyledButton,
   Highlight,
   Loader,
+  Progress
 } from "@mantine/core";
 import { getExpressionForAnki, getGlossaryBriefForAnki, getGlossaryForAnki, getSentenceForAnki, getSentenceTranslationForAnki, getTermDefinitions } from "@/lib/japanese";
 import {
@@ -24,9 +25,10 @@ import {
   getPrimaryDeck,
   getCardFormats,
   FieldValueType,
+  ProcessingStatusType,
 } from "@/lib/anki";
 import { Howl } from "howler";
-import { addNotesToAnki, hasMecabSupport } from "@/lib/card-builder/notes";
+import { addNotesToAnki, hasMecabSupport, responseContentToNoteResult } from "@/lib/card-builder/notes";
 import NoteAddInterface from "@/interfaces/card_builder/NoteAddInterface";
 import { IconVolume, IconX, IconEye, IconEyeOff } from "@tabler/icons";
 import AnkiCardFormat from "@/interfaces/anki/ankiCardFormat";
@@ -37,6 +39,7 @@ import { AudioUrl, Definition } from "@/lib/japanese";
 import { MorphState, addMorphs, removeMorphs } from "@/lib/morphs";
 import CardBuilderResult from "./cardBuilderResult";
 import NoteResult from "@/interfaces/card_builder/NoteResultInterface";
+import { ProcessingResponseInterface, getProcessingResponse } from "@/lib/processing";
 
 const useStyles = createStyles((theme) => ({
   card: {
@@ -68,7 +71,7 @@ const useStyles = createStyles((theme) => ({
 }));
 
 const VOCAB_LIMIT_FOR_AUDIO = 120; // prevent crashing from massive audio scraping
-const MILLISECONDS_BEFORE_SHOWING_LOADER = 1000;
+const INTERVAL_FOR_STATUS_FETCH = 500;
 const EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE = [
   "sentences",
   "sentence_translations",
@@ -91,7 +94,6 @@ function CardBuilderPreview({
 }) {
   const [deckNames, setDeckNames] = useState([]);
   const [mecabMissing, setMecabMissing] = useState(false);
-  const [isFetchingResult, setIsFetchingResult] = useState(false);
   const [hasResult, setHasResult] = useState(false);
   const [noteResult, setNoteResult] = useState<NoteResult>();
   const [noteResultExpressionKey, setNoteResultExpressionKey] = useState("");
@@ -99,6 +101,7 @@ function CardBuilderPreview({
   const [cardFormatModelName, setCardFormatModelName] = useState("");
   const [cardFormats, setCardFormats] = useState<AnkiCardFormat[]>([]);
   const [expressionTerms, setExpressionTerms] = useState<ExpressionTerm[]>([]);
+  const [processingResponse, setProcessingResponse] = useState<ProcessingResponseInterface | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasSentences, setHasSentences] = useState(false);
   const [streamingAudioUrls, setStreamingAudioUrls] = useState<Set<string>>(
@@ -139,80 +142,103 @@ function CardBuilderPreview({
         passages: passages,
         include_audio_urls:
           expressionList.length > VOCAB_LIMIT_FOR_AUDIO ? false : undefined,
-      }).then((definitions) => {
-        if (!isLoaded) {
-          const expressionTerms: ExpressionTerm[] = definitions.map(
-            (definition: Definition, index: number) => {
-              // add sentences if expression has sentences, eg. import json / kindle vocab
-              const onlyUserExpression =
-                expressionList.length === definitions.length;
-
-              const useExistingIfNotEmpty = <U extends keyof Definition>(
-                dictionaryKey: U
-              ) => {
-                if (
-                  onlyUserExpression &&
-                  expressionList[index]?.definition?.[dictionaryKey]
-                ) {
-                  const val =
-                    expressionList[index]?.definition?.[dictionaryKey];
-                  const isValidString =
-                    typeof val === "string" && val.length > 0;
-                  const isValidArray = Array.isArray(val) && val.length > 0;
-                  if (isValidString || isValidArray) {
-                    definition[dictionaryKey] =
-                      expressionList[index]?.definition?.[dictionaryKey];
-                  }
-                }
-              };
-
-              const combineExistingArrays = <U extends keyof Definition>(
-                dictionaryKey: U
-              ) => {
-                if (
-                  onlyUserExpression &&
-                  expressionList[index]?.definition?.[dictionaryKey]?.[0]
-                ) {
-                  definition[dictionaryKey] = [
-                    ...((definition[dictionaryKey] as string[]) || []),
-                    ...((expressionList[index]?.definition?.[
-                      dictionaryKey
-                    ] as string[]) || []),
-                  ] as Definition[U];
-                }
-              };
-
-              EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP.forEach((key: string) => {
-                useExistingIfNotEmpty(key as keyof Definition);
-              });
-
-              EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE.forEach((key: string) => {
-                combineExistingArrays(key as keyof Definition);
-              });
-
-              // console.log("gloss", definition?.selectedGlossary);
-
-              if (definition.sentences && definition.sentences.length > 0) {
-                setHasSentences(true);
-              }
-              if (expressionList[index]?.definition?.audio_urls?.[0]) {
-                definition.audio_urls = [
-                  ...(expressionList[index]?.definition?.audio_urls || []),
-                  ...(definition.audio_urls || []),
-                ];
-              }
-              return {
-                userExpression: definition.surface || "",
-                definition: definition,
-              };
-            }
-          );
-          setExpressionTerms(expressionTerms);
+      }).then((result) => {
+        if (result.status === ProcessingStatusType.Progress && result.location) {
+          fetchAndShowStatus(result.location, (response: ProcessingResponseInterface) => {
+            const definitions = response === null ? [] : response.data;
+            mapDefinitionsToExpressionTerms(definitions);
+          });
+        } else if (result.status === ProcessingStatusType.Complete) {
+          const definitions = result.data;
+          mapDefinitionsToExpressionTerms(definitions);
         }
-        setIsLoaded(true);
       });
     });
   }, []);
+
+  const mapDefinitionsToExpressionTerms = (definitions: Definition[]) => {
+    if (!isLoaded) {
+      const expressionTerms: ExpressionTerm[] = definitions.map(
+        (definition: Definition, index: number) => {
+          // add sentences if expression has sentences, eg. import json / kindle vocab
+          const onlyUserExpression =
+            expressionList.length === definitions.length;
+
+          const useExistingIfNotEmpty = <U extends keyof Definition>(
+            dictionaryKey: U
+          ) => {
+            if (
+              onlyUserExpression &&
+              expressionList[index]?.definition?.[dictionaryKey]
+            ) {
+              const val =
+                expressionList[index]?.definition?.[dictionaryKey];
+              const isValidString =
+                typeof val === "string" && val.length > 0;
+              const isValidArray = Array.isArray(val) && val.length > 0;
+              if (isValidString || isValidArray) {
+                definition[dictionaryKey] =
+                  expressionList[index]?.definition?.[dictionaryKey];
+              }
+            }
+          };
+
+          const combineExistingArrays = <U extends keyof Definition>(
+            dictionaryKey: U
+          ) => {
+            if (
+              onlyUserExpression &&
+              expressionList[index]?.definition?.[dictionaryKey]?.[0]
+            ) {
+              definition[dictionaryKey] = [
+                ...((definition[dictionaryKey] as string[]) || []),
+                ...((expressionList[index]?.definition?.[
+                  dictionaryKey
+                ] as string[]) || []),
+              ] as Definition[U];
+            }
+          };
+
+          EXPRESSON_KEYS_FOR_FIELDS_TO_KEEP.forEach((key: string) => {
+            useExistingIfNotEmpty(key as keyof Definition);
+          });
+
+          EXPRESSON_KEYS_FOR_FIELDS_TO_COMBINE.forEach((key: string) => {
+            combineExistingArrays(key as keyof Definition);
+          });
+
+          if (definition.sentences && definition.sentences.length > 0) {
+            setHasSentences(true);
+          }
+          if (expressionList[index]?.definition?.audio_urls?.[0]) {
+            definition.audio_urls = [
+              ...(expressionList[index]?.definition?.audio_urls || []),
+              ...(definition.audio_urls || []),
+            ];
+          }
+          return {
+            userExpression: definition.surface || "",
+            definition: definition,
+          };
+        }
+      );
+      setExpressionTerms(expressionTerms);
+    }
+    setIsLoaded(true);
+  }
+
+  const fetchAndShowStatus = async (location: string, onCompleteCallback?: Function) => {
+    const timer = setInterval(async () => {
+      const response = await getProcessingResponse(location);
+      setProcessingResponse(response);
+      if (response.status === ProcessingStatusType.Complete) {
+        if (onCompleteCallback !== null) {
+          onCompleteCallback!(response);
+        }
+        clearInterval(timer);
+      }
+    }, INTERVAL_FOR_STATUS_FETCH);
+  }
 
   const removeTerm = (index: number) => {
     const terms = [...expressionTerms];
@@ -374,27 +400,15 @@ function CardBuilderPreview({
         tags: [],
       };
     });
-    setLoadingForLongTasks();
     const addNotesResult = await addNotesToAnki(notesToAdd);
-    setNoteResult(addNotesResult);
-    setNoteResultExpressionKey(expressionKey);
-    setHasResult(true);
-    setIsFetchingResult(false); // whether to show loader or not
-    // if (onSuccessCallback) {
-    //   onSuccessCallback();
-    // }
+    if (addNotesResult.status === ProcessingStatusType.Progress && addNotesResult.location) {
+      fetchAndShowStatus(addNotesResult.location, (response: ProcessingResponseInterface) => {
+        setNoteResult(responseContentToNoteResult(response.data));
+        setNoteResultExpressionKey(expressionKey);
+        setHasResult(true);
+      });
+    }
   };
-
-  /**
-   * Show loader for long tasks
-   */
-  const setLoadingForLongTasks = () => {
-    setTimeout(() => {
-      if (!hasResult) {
-        setIsFetchingResult(true);
-      }
-    }, MILLISECONDS_BEFORE_SHOWING_LOADER);
-  }
 
   const isTermKnown = (term: ExpressionTerm) =>
     term.definition?.morph_state === MorphState.KNOWN;
@@ -443,7 +457,14 @@ function CardBuilderPreview({
   const KnownVocabColor =
     theme.colorScheme === "dark" ? theme.colors.dark[3] : theme.colors.gray[4];
 
-  if (!isLoaded || isFetchingResult) {
+
+  if (processingResponse !== null && processingResponse.status === ProcessingStatusType.Progress) {
+    return (
+      <Progress striped animate value={processingResponse.progress} />
+    )
+  }
+
+  if (!isLoaded) {
     return <Skeleton height={400} />;
   } else if (mecabMissing) {
     return (
