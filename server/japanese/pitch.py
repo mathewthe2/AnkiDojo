@@ -9,30 +9,21 @@ class Pitch():
     def get_pitch(self, expression, reading=''):
         cursor = self.db.cursor()
         if not reading:
-            cursor.execute("SELECT pitch FROM Dict WHERE expression=?", (expression,))
+            cursor.execute("SELECT pitch FROM VocabPitch WHERE expression=?", (expression,))
         else:
-            cursor.execute("SELECT pitch FROM Dict WHERE expression=? AND reading=?", (expression, reading))
+            cursor.execute("SELECT pitch FROM VocabPitch WHERE expression=? AND reading=?", (expression, reading))
         result = cursor.fetchone()
-        return None if result is None else result[0]
+        return None if result is None else result
 
     def get_svg(self, expression, reading=''):
         result = []
         if not expression:
             return []
-        pitch = self.get_pitch(expression, reading)
-        if not pitch:
+        pitches = self.get_pitch(expression, reading)
+        if not pitches:
             return []
-        pitch = re.sub(r"\((.*?)\)", "", pitch) # remove paranthesis content
-        pitches = []
-        if ',' in pitch:
-            pitches_by_word = pitch.split(',')
-            for pitch_by_word in pitches_by_word:
-                pitch_by_word = re.sub(r'[^\w]', '', pitch_by_word) # remove symbols 
-                pitches.append(pitch_by_word)
-        else:
-            pitch = re.sub(r'[^\w]', '', pitch) # remove symbols 
-            pitches = [pitch]
-        
+
+        # convert to int
         parsed_pitches = set()
         for raw_pitch in pitches:
             if raw_pitch.isnumeric():

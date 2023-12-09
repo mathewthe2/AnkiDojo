@@ -40,19 +40,34 @@ function DictionariesSettings() {
 
     const handleFile = async (file: FileWithPath) => {
         setDropModalOpened(false);
-        const newDictionary : Dictionary = await addDictionary(file);
+        const newDictionary: Dictionary = await addDictionary(file);
         // TODO: show loading modal here
         setDictionaries([...dictionaries, newDictionary]);
     };
 
+    const resetDictionaries = async () => {
+        // show confirm dialog yes / no
+
+        // if confirm reset dictionaries
+        // download dictionary db file from github
+        // https://raw.githubusercontent.com/mathewthe2/AnkiDojo/main/user_files/dictionaries.db
+        // show progress dialog, warn user not to close 
+        // finish and refresh dictioanries
+    }
+
     return (
         <>
-            <Button mt={10} onClick={() => setDropModalOpened(true)}>
-                <Group>
-                    <IconPlus />
-                    Add Dictionary
-                </Group>
-            </Button>
+            <Group mt={10} position="apart">
+                <Button onClick={() => setDropModalOpened(true)}>
+                    <Group>
+                        <IconPlus />
+                        Add Dictionary
+                    </Group>
+                </Button>
+                <Button disabled variant="outline" onClick={() => resetDictionaries()}>
+                    Reset
+                </Button>
+            </Group>
             <Modal
                 centered
                 withCloseButton={false}
@@ -105,7 +120,7 @@ function DictionariesSettings() {
                 </Dropzone>
             </Modal>
             <Box pt={10}></Box>
-            {dictionaries.map((dictionary:Dictionary) => (
+            {dictionaries.map((dictionary: Dictionary) => (
                 <Box key={dictionary.id}>
                     <DictionaryItem dictionary={dictionary} />
                 </Box>

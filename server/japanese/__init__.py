@@ -16,6 +16,6 @@ class Japanese(metaclass=Singleton):
         self.translator = Translator(
             Deinflector(os.path.join(directory, 'deinflect.json')),
             Dictionary(os.path.join(user_files_directory, 'dictionaries.db')))
-        self.pitch = Pitch(os.path.join(directory, 'pitch_accents.sqlite'))
+        self.pitch = Pitch(os.path.join(user_files_directory, 'dictionaries.db'))
         self.audio_handler = AudioHandler()
         self.morph_util = MorphUtil()
