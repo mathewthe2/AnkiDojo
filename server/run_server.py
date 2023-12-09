@@ -1,9 +1,6 @@
 import threading
-import os
 
-from flask import Flask
-from flask_cors import CORS
-from werkzeug.serving import make_server
+from .vendor.werkzeug.serving import make_server
 
 from .flask_app import create_flask_app
 from .config import config
