@@ -32,7 +32,7 @@ next export -o ../server/app
 Build might fail if `next-font-manifest.json` is missing.
 
 ```bash
-touch .next/server/next-font-manifest.json
+echo {} > .next/server/next-font-manifest.json
 ```
 
 ### Distribute for Anki
