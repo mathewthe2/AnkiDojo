@@ -1,4 +1,4 @@
-
+from collections import OrderedDict
 from concurrent.futures import as_completed
 from concurrent.futures.thread import ThreadPoolExecutor
 from aqt import mw
@@ -66,8 +66,11 @@ def terms():
             }
             if definitions:
                 definition.update(definitions[0])
+                glossaries = OrderedDict()
                 for definition_entry in definitions:
-                    definition['glossary'].append(', '.join(definition_entry['glossary']))
+                    glossary = ', '.join(definition_entry['glossary'])
+                    glossaries[glossary] = None # we are using glossaries as an ordered set
+                definition['glossary'] = list(glossaries.keys())
                 definition['morph_state']= ankiHelper.get_morph_state(definitions[0]['expression'])
                 has_one_definition = True
             if has_passages:
