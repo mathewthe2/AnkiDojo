@@ -38,7 +38,7 @@ echo {} > .next/server/next-font-manifest.json
 ### Distribute for Anki
 
 ```bash
-sh build.sh
+sh bundle.sh
 ```
 ### Acknowledgements
 - JMDict
