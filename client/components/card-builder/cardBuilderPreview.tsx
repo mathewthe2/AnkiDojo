@@ -661,6 +661,7 @@ function CardBuilderPreview({
                           className={
                             isKnownVocab ? classes.knownVocabSelect : ""
                           }
+                          withinPortal
                           searchable
                           creatable
                           getCreateLabel={(query) => `+ Use glossary: ${query}`}

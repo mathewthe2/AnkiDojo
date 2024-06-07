@@ -66,7 +66,8 @@ def terms():
             }
             if definitions:
                 definition.update(definitions[0])
-                definition['glossary'] = list(definitions[0]['glossary'])
+                for definition_entry in definitions:
+                    definition['glossary'].append(', '.join(definition_entry['glossary']))
                 definition['morph_state']= ankiHelper.get_morph_state(definitions[0]['expression'])
                 has_one_definition = True
             if has_passages:
