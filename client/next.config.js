@@ -7,7 +7,7 @@ const nextConfig = {
     ANKI_HOST: 'http://127.0.0.1:5008',
     PROXY: 'http://127.0.0.1:5008/p'
   },
-  output: 'export',
+  output: 'standalone',
 }
 
 module.exports = nextConfig

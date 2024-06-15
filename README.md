@@ -17,7 +17,7 @@ yarn install
 Run in development mode.
 
 ```bash
-pnpm dev
+yarn dev
 ```
 
 
@@ -25,7 +25,7 @@ pnpm dev
 
 ```bash
 cd client
-pnpm build
+yarn build
 next export -o ../server/app
 ```
 
