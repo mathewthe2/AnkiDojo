@@ -67,10 +67,12 @@ function Search() {
 
         <Tabs.Panel value="anki" pt="xs">
           {/* Anki tab content */}
+          <></>
         </Tabs.Panel>
 
         <Tabs.Panel value="dictionary" pt="xs">
           {/* Dictionary tab content */}
+          <></>
         </Tabs.Panel>
       </Tabs>
       <TextInput

@@ -37,6 +37,8 @@ echo {} > .next/server/next-font-manifest.json
 
 ### Distribute for Anki
 
+In project root, run the following command.
+
 ```bash
 sh bundle.sh
 ```
