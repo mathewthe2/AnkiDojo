@@ -307,14 +307,11 @@ function CardBuilderPreview({
   };
 
   const playWordAudio = (soundUrl: string) => {
-    const soundUrlWithProxy = `${process.env.PROXY}/${encodeURIComponent(
-      soundUrl
-    )}`;
     setStreamingAudioUrls(
       (audioUrls) => new Set([...Array.from(audioUrls), soundUrl])
     );
     var sound = new Howl({
-      src: [soundUrlWithProxy],
+      src: [soundUrl],
       html5: true,
       format: ["mp3"],
       onplay: () => {
@@ -776,6 +773,7 @@ function CardBuilderPreview({
       </ScrollArea.Autosize>
       <Card mt={20} ml={5} className={classes.card}>
         <Select
+          withinPortal
           label={<Text mb={10}>Deck</Text>}
           data={deckNames.map((deckName) => {
             return {
@@ -787,6 +785,7 @@ function CardBuilderPreview({
           onChange={(deckName: string) => setSelectedDeckName(deckName)}
         ></Select>
         <Select
+          withinPortal
           label="Card Format"
           value={cardFormatModelName}
           data={cardFormats.map((cardFormat) => cardFormat.modelName)}
