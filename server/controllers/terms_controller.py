@@ -109,12 +109,22 @@ def terms():
             include_audio_urls = ankiHelper.get_anki_settings("enable_word_audio_search")
         if include_audio_urls:
             task = statusControl.create_task(total=len(result))
-            op = QueryOp(
-                parent=mw,
-                op=lambda _: add_audio(result, language, task),
-                success=lambda _: None,
-            )
-            op.with_progress().run_in_background()
+            future = __import__('concurrent.futures', fromlist=['Future']).Future()
+            def start_op():
+                try:
+                    op = QueryOp(
+                        parent=mw,
+                        op=lambda _: add_audio(result, language, task),
+                        success=lambda _: None,
+                    )
+                    op.with_progress().run_in_background()
+                    future.set_result(True)
+                except Exception as e:
+                    future.set_exception(e)
+
+            mw.taskman.run_on_main(start_op)
+            future.result(timeout=10)
+
             return jsonify({'status': ProgressTypes.PROGRESS.value, 'location': 'status/{}'.format(task.id), 'data': []})     
     return jsonify({'status': 'complete', 'location': '', 'data': result})
 

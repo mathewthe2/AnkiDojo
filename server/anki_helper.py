@@ -2,12 +2,15 @@ from aqt import mw
 from aqt.operations import QueryOp
 import os
 import random
+import concurrent.futures
 from .utils.singleton import Singleton
 from .anki_config import DEFAULT_ANKI_SETTINGS
 from .settings import AnkiSettings, MorphSettings
 from .anki_connect import AnkiConnect
 from .status.status_control import StatusControl
 from .status.status_task import ProgressTypes
+
+future = concurrent.futures.Future()
 
 # Paths
 user_files_directory = os.path.join(os.path.dirname(__file__), '..', 'user_files')
@@ -161,12 +164,22 @@ class AnkiHelper(metaclass=Singleton):
     def add_notes(self, notes):
         notes = self.add_options_to_notes(notes)
         task = self.statusControl.create_task(total=len(notes))
-        op = QueryOp(
-            parent=mw,
-            op=lambda _: self.ankiConnect.addNotes(notes, task.id),
-            success=lambda _: None,
-        )
-        op.with_progress().run_in_background()
+        future = concurrent.futures.Future()
+
+        def start_op():
+            try:
+                op = QueryOp(
+                    parent=mw,
+                    op=lambda _: self.ankiConnect.addNotes(notes, task.id),
+                    success=lambda _: None,
+                )
+                op.with_progress().run_in_background()
+                future.set_result(True)
+            except Exception as e:
+                future.set_exception(e)
+
+        mw.taskman.run_on_main(start_op)
+        future.result(timeout=10)  # wait until op is safely scheduled on main thread
         return {'status': ProgressTypes.PROGRESS.value, 'location': 'status/{}'.format(task.id), 'data': []}     
 
     def get_known_morphs(self):
@@ -185,5 +198,3 @@ class AnkiHelper(metaclass=Singleton):
         # TODO: get other morph states apart from known
         known_morphs = self.morph_settings.get_known_morphs()
         return 'MORPH_STATE_KNOWN' if morph in known_morphs else ''
-
-    

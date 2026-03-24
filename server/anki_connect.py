@@ -1,11 +1,11 @@
-import aqt
+from aqt import appVersion, mw
 import anki
 import enum
 import base64
 import hashlib
 from .status.status_control import StatusControl
 
-anki_version = tuple(int(segment) for segment in aqt.appVersion.split("."))
+anki_version = tuple(int(segment) for segment in appVersion.split("."))
 
 if anki_version < (2, 1, 45):
     raise Exception("Minimum Anki version supported: 2.1.45")
@@ -61,9 +61,9 @@ class AnkiConnect():
         # Add every card without UI update to prevent 
         for ankiNote in ankiNotes[:-1]:
             collection.add_note(ankiNote, deck_id)
-        # Add card with UI update
-        aqt.operations.note.add_note(parent=self.window(), note=ankiNotes[-1], target_deck_id=deck_id).run_in_background()
         collection.autosave()
+        # Refresh the UI on the main thread
+        mw.taskman.run_on_main(lambda: mw.reset())
     
     def media(self):
         media = self.collection().media
@@ -98,7 +98,7 @@ class AnkiConnect():
         return deck['id']
             
     def window(self):
-        return aqt.mw
+        return mw
 
     def collection(self):
         collection = self.window().col
@@ -316,7 +316,7 @@ DEFAULT_CONFIG = {
 
 def setting(key):
     try:
-        return aqt.mw.addonManager.getConfig(__name__).get(key, DEFAULT_CONFIG[key])
+        return mw.addonManager.getConfig(__name__).get(key, DEFAULT_CONFIG[key])
     except:
         raise Exception('setting {} not found'.format(key))
 
