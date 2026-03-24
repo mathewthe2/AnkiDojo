@@ -59,7 +59,7 @@ class AnkiConnect():
     def add_notes_batch(self, ankiNotes, deck_id):
         collection = self.collection()
         # Add every card without UI update to prevent 
-        for ankiNote in ankiNotes[:-1]:
+        for ankiNote in ankiNotes:
             collection.add_note(ankiNote, deck_id)
         collection.autosave()
         # Refresh the UI on the main thread
