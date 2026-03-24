@@ -20,28 +20,6 @@ Run in development mode.
 yarn dev
 ```
 
-
-### Build
-
-```bash
-cd client
-yarn build
-next export -o ../server/app
-```
-
-Build might fail if `next-font-manifest.json` is missing.
-
-```bash
-echo {} > .next/server/next-font-manifest.json
-```
-
-### Distribute for Anki
-
-In project root, run the following command.
-
-```bash
-sh bundle.sh
-```
 ### Acknowledgements
 - JMDict
 - Yomichan
