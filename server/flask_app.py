@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask
-from flask_cors import CORS
+from .vendor.flask_cors.extension import CORS
 from logging.config import dictConfig
 
 # Direct Flask's logging to sys.stdout instead of sys.stderr
